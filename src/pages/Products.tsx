@@ -1,15 +1,29 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Package } from 'lucide-react';
+import { Search, Filter, Edit, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import ProductModal from '@/components/ProductModal';
+import { useToast } from '@/hooks/use-toast';
+
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
+  category: string;
+  price: number;
+  stock: number;
+  minStock: number;
+  status: string;
+}
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
-  // Mock product data
-  const products = [
+  // Mock product data with state management
+  const [products, setProducts] = useState<Product[]>([
     {
       id: 1,
       name: 'Wireless Headphones',
@@ -50,7 +64,7 @@ const Products = () => {
       minStock: 5,
       status: 'Out of Stock'
     }
-  ];
+  ]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,6 +79,54 @@ const Products = () => {
     }
   };
 
+  const updateProductStatus = (product: Product) => {
+    if (product.stock === 0) {
+      return 'Out of Stock';
+    } else if (product.stock <= product.minStock) {
+      return 'Low Stock';
+    } else {
+      return 'In Stock';
+    }
+  };
+
+  const handleSaveProduct = (productData: Product) => {
+    const updatedProduct = {
+      ...productData,
+      status: updateProductStatus(productData)
+    };
+
+    if (productData.id) {
+      // Update existing product
+      setProducts(products.map(p => 
+        p.id === productData.id ? updatedProduct : p
+      ));
+      toast({
+        title: "Product Updated",
+        description: `${productData.name} has been updated successfully`,
+      });
+    } else {
+      // Add new product
+      const newProduct = {
+        ...updatedProduct,
+        id: Date.now() // Simple ID generation
+      };
+      setProducts([...products, newProduct]);
+      toast({
+        title: "Product Added",
+        description: `${productData.name} has been added successfully`,
+      });
+    }
+  };
+
+  const handleDeleteProduct = (productId: number) => {
+    const product = products.find(p => p.id === productId);
+    setProducts(products.filter(p => p.id !== productId));
+    toast({
+      title: "Product Deleted",
+      description: `${product?.name} has been deleted successfully`,
+    });
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase())
@@ -74,10 +136,7 @@ const Products = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-        <Button className="flex items-center space-x-2">
-          <Plus className="h-4 w-4" />
-          <span>Add Product</span>
-        </Button>
+        <ProductModal onSave={handleSaveProduct} />
       </div>
 
       {/* Search and Filter Bar */}
@@ -162,10 +221,20 @@ const Products = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
+                      <ProductModal 
+                        product={product} 
+                        onSave={handleSaveProduct}
+                        trigger={
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
