@@ -6,65 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import ProductModal from '@/components/ProductModal';
 import { useToast } from '@/hooks/use-toast';
-
-interface Product {
-  id: number;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  minStock: number;
-  status: string;
-}
+import { useProducts } from '@/hooks/useProducts';
 
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
-
-  // Mock product data with state management
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: 1,
-      name: 'Wireless Headphones',
-      sku: 'WH-001',
-      category: 'Electronics',
-      price: 99.99,
-      stock: 45,
-      minStock: 10,
-      status: 'In Stock'
-    },
-    {
-      id: 2,
-      name: 'Gaming Mouse',
-      sku: 'GM-002',
-      category: 'Electronics',
-      price: 59.99,
-      stock: 8,
-      minStock: 10,
-      status: 'Low Stock'
-    },
-    {
-      id: 3,
-      name: 'Coffee Mug',
-      sku: 'CM-003',
-      category: 'Home & Garden',
-      price: 12.99,
-      stock: 120,
-      minStock: 20,
-      status: 'In Stock'
-    },
-    {
-      id: 4,
-      name: 'Desk Lamp',
-      sku: 'DL-004',
-      category: 'Office',
-      price: 34.99,
-      stock: 0,
-      minStock: 5,
-      status: 'Out of Stock'
-    }
-  ]);
+  const { products, loading, error, updateProduct, deleteProduct } = useProducts();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -79,58 +26,69 @@ const Products = () => {
     }
   };
 
-  const updateProductStatus = (product: Product) => {
-    if (product.stock === 0) {
-      return 'Out of Stock';
-    } else if (product.stock <= product.minStock) {
-      return 'Low Stock';
-    } else {
-      return 'In Stock';
-    }
-  };
-
-  const handleSaveProduct = (productData: Product) => {
-    const updatedProduct = {
-      ...productData,
-      status: updateProductStatus(productData)
-    };
-
-    if (productData.id) {
-      // Update existing product
-      setProducts(products.map(p => 
-        p.id === productData.id ? updatedProduct : p
-      ));
+  const handleSaveProduct = async (productData: any) => {
+    try {
+      if (productData.id) {
+        // Update existing product
+        await updateProduct(productData.id, {
+          name: productData.name,
+          sku: productData.sku,
+          category: productData.category,
+          price: productData.price,
+          stock: productData.stock,
+          min_stock: productData.minStock
+        });
+        toast({
+          title: "Product Updated",
+          description: `${productData.name} has been updated successfully`,
+        });
+      }
+    } catch (err) {
       toast({
-        title: "Product Updated",
-        description: `${productData.name} has been updated successfully`,
-      });
-    } else {
-      // Add new product
-      const newProduct = {
-        ...updatedProduct,
-        id: Date.now() // Simple ID generation
-      };
-      setProducts([...products, newProduct]);
-      toast({
-        title: "Product Added",
-        description: `${productData.name} has been added successfully`,
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to save product",
+        variant: "destructive"
       });
     }
   };
 
-  const handleDeleteProduct = (productId: number) => {
-    const product = products.find(p => p.id === productId);
-    setProducts(products.filter(p => p.id !== productId));
-    toast({
-      title: "Product Deleted",
-      description: `${product?.name} has been deleted successfully`,
-    });
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const product = products.find(p => p.id === productId);
+      await deleteProduct(productId);
+      toast({
+        title: "Product Deleted",
+        description: `${product?.name} has been deleted successfully`,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to delete product",
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading products...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -209,7 +167,7 @@ const Products = () => {
                     {product.category}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${product.price}
+                    ${Number(product.price).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.stock}
@@ -222,7 +180,16 @@ const Products = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <ProductModal 
-                        product={product} 
+                        product={{
+                          id: product.id,
+                          name: product.name,
+                          sku: product.sku,
+                          category: product.category,
+                          price: Number(product.price),
+                          stock: product.stock,
+                          minStock: product.min_stock,
+                          status: product.status
+                        }} 
                         onSave={handleSaveProduct}
                         trigger={
                           <Button variant="ghost" size="sm">

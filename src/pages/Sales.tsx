@@ -6,64 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import SalesModal from '@/components/SalesModal';
 import { useToast } from '@/hooks/use-toast';
-
-interface Sale {
-  id: string;
-  customer: string;
-  date: string;
-  items: number;
-  total: number;
-  status: string;
-  cart?: any[];
-}
+import { useSales } from '@/hooks/useSales';
+import { useProducts } from '@/hooks/useProducts';
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
-
-  // Mock sales data with state management
-  const [sales, setSales] = useState<Sale[]>([
-    {
-      id: 'ORD-001',
-      customer: 'John Doe',
-      date: '2024-01-15',
-      items: 3,
-      total: 299.97,
-      status: 'Completed'
-    },
-    {
-      id: 'ORD-002',
-      customer: 'Jane Smith',
-      date: '2024-01-14',
-      items: 1,
-      total: 59.99,
-      status: 'Completed'
-    },
-    {
-      id: 'ORD-003',
-      customer: 'Bob Johnson',
-      date: '2024-01-14',
-      items: 2,
-      total: 139.98,
-      status: 'Pending'
-    },
-    {
-      id: 'ORD-004',
-      customer: 'Alice Brown',
-      date: '2024-01-13',
-      items: 4,
-      total: 189.96,
-      status: 'Completed'
-    }
-  ]);
-
-  // Mock products for sales modal
-  const products = [
-    { id: 1, name: 'Wireless Headphones', sku: 'WH-001', price: 99.99, stock: 45 },
-    { id: 2, name: 'Gaming Mouse', sku: 'GM-002', price: 59.99, stock: 8 },
-    { id: 3, name: 'Coffee Mug', sku: 'CM-003', price: 12.99, stock: 120 },
-    { id: 4, name: 'Desk Lamp', sku: 'DL-004', price: 34.99, stock: 15 }
-  ];
+  const { sales, loading: salesLoading, error: salesError, addSale } = useSales();
+  const { products, loading: productsLoading } = useProducts();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -78,14 +28,40 @@ const Sales = () => {
     }
   };
 
-  const handleSaleComplete = (sale: Sale) => {
-    setSales([sale, ...sales]);
+  const handleSaleComplete = async (saleData: any) => {
+    try {
+      const orderNumber = `ORD-${Date.now()}`;
+      
+      await addSale({
+        order_id: orderNumber,
+        customer_name: saleData.customer,
+        total_amount: saleData.total,
+        items_count: saleData.cart.length,
+        status: 'Completed'
+      }, saleData.cart.map((item: any) => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity
+      })));
+
+      toast({
+        title: "Sale Completed",
+        description: `Order ${orderNumber} has been processed successfully`,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to process sale",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleViewReceipt = (sale: Sale) => {
+  const handleViewReceipt = (sale: any) => {
     toast({
       title: "Receipt",
-      description: `Viewing receipt for order ${sale.id}`,
+      description: `Viewing receipt for order ${sale.order_id}`,
     });
   };
 
@@ -97,17 +73,33 @@ const Sales = () => {
   };
 
   const filteredSales = sales.filter(sale =>
-    sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.customer.toLowerCase().includes(searchTerm.toLowerCase())
+    sale.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const today = new Date().toISOString().split('T')[0];
   const todaysSales = sales
-    .filter(sale => sale.date === new Date().toISOString().split('T')[0])
-    .reduce((total, sale) => total + sale.total, 0);
+    .filter(sale => sale.sale_date === today)
+    .reduce((total, sale) => total + Number(sale.total_amount), 0);
 
-  const todaysOrders = sales.filter(sale => sale.date === new Date().toISOString().split('T')[0]).length;
+  const todaysOrders = sales.filter(sale => sale.sale_date === today).length;
+  const monthSales = sales.reduce((total, sale) => total + Number(sale.total_amount), 0);
 
-  const monthSales = sales.reduce((total, sale) => total + sale.total, 0);
+  if (salesLoading || productsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (salesError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {salesError}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -190,19 +182,19 @@ const Sales = () => {
               {filteredSales.map((sale) => (
                 <tr key={sale.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {sale.id}
+                    {sale.order_id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.customer}
+                    {sale.customer_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.date}
+                    {sale.sale_date}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.items}
+                    {sale.items_count}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${sale.total.toFixed(2)}
+                    ${Number(sale.total_amount).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(sale.status)}`}>

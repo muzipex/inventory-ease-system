@@ -4,54 +4,32 @@ import { Search, Filter, Edit, Trash2, User, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { useCustomers } from '@/hooks/useCustomers';
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Mock customer data
-  const customers = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@email.com',
-      phone: '+1 (555) 123-4567',
-      totalOrders: 12,
-      totalSpent: 1299.50,
-      lastOrder: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@email.com',
-      phone: '+1 (555) 987-6543',
-      totalOrders: 8,
-      totalSpent: 899.75,
-      lastOrder: '2024-01-14'
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      email: 'bob.johnson@email.com',
-      phone: '+1 (555) 456-7890',
-      totalOrders: 15,
-      totalSpent: 2150.25,
-      lastOrder: '2024-01-13'
-    },
-    {
-      id: 4,
-      name: 'Alice Brown',
-      email: 'alice.brown@email.com',
-      phone: '+1 (555) 321-0987',
-      totalOrders: 6,
-      totalSpent: 650.00,
-      lastOrder: '2024-01-12'
-    }
-  ];
+  const { customers, loading, error } = useCustomers();
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading customers...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -71,13 +49,13 @@ const Customers = () => {
         </Card>
         <Card className="p-6">
           <div className="text-2xl font-bold text-gray-900">
-            ${customers.reduce((sum, c) => sum + c.totalSpent, 0).toFixed(2)}
+            ${customers.reduce((sum, c) => sum + Number(c.total_spent), 0).toFixed(2)}
           </div>
           <div className="text-sm text-gray-500">Total Revenue</div>
         </Card>
         <Card className="p-6">
           <div className="text-2xl font-bold text-gray-900">
-            {Math.round(customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length)}
+            {customers.length > 0 ? Math.round(customers.reduce((sum, c) => sum + Number(c.total_spent), 0) / customers.length) : 0}
           </div>
           <div className="text-sm text-gray-500">Avg. Order Value</div>
         </Card>
@@ -121,9 +99,6 @@ const Customers = () => {
                   Total Spent
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Order
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -145,24 +120,25 @@ const Customers = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                        {customer.email}
-                      </div>
-                      <div className="flex items-center mt-1">
-                        <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                        {customer.phone}
-                      </div>
+                      {customer.email && (
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                          {customer.email}
+                        </div>
+                      )}
+                      {customer.phone && (
+                        <div className="flex items-center mt-1">
+                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                          {customer.phone}
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {customer.totalOrders}
+                    {customer.total_orders}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${customer.totalSpent.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {customer.lastOrder}
+                    ${Number(customer.total_spent).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
