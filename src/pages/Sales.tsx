@@ -4,13 +4,16 @@ import { Search, Calendar, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SalesModal from '@/components/SalesModal';
+import ReceiptModal from '@/components/ReceiptModal';
 import { useToast } from '@/hooks/use-toast';
 import { useSales } from '@/hooks/useSales';
 import { useProducts } from '@/hooks/useProducts';
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState('all');
   const { toast } = useToast();
   const { sales, loading: salesLoading, error: salesError, addSale } = useSales();
   const { products, loading: productsLoading } = useProducts();
@@ -30,14 +33,13 @@ const Sales = () => {
 
   const handleSaleComplete = async (saleData: any) => {
     try {
-      const orderNumber = `ORD-${Date.now()}`;
-      
       await addSale({
-        order_id: orderNumber,
-        customer_name: saleData.customer,
-        total_amount: saleData.total,
+        order_id: saleData.order_id,
+        customer_name: saleData.customer_name,
+        total_amount: saleData.total_amount,
         items_count: saleData.cart.length,
-        status: 'Completed'
+        status: saleData.status,
+        payment_method: saleData.payment_method
       }, saleData.cart.map((item: any) => ({
         product_id: item.id,
         quantity: item.quantity,
@@ -47,7 +49,7 @@ const Sales = () => {
 
       toast({
         title: "Sale Completed",
-        description: `Order ${orderNumber} has been processed successfully`,
+        description: `Order ${saleData.order_id} has been processed successfully`,
       });
     } catch (err) {
       toast({
@@ -58,21 +60,55 @@ const Sales = () => {
     }
   };
 
-  const handleViewReceipt = (sale: any) => {
-    toast({
-      title: "Receipt",
-      description: `Viewing receipt for order ${sale.order_id}`,
-    });
-  };
-
   const handleExport = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Order ID,Customer,Date,Items,Total,Status,Payment Method\n"
+      + filteredSales.map(sale => 
+          `${sale.order_id},${sale.customer_name},${sale.sale_date},${sale.items_count},${sale.total_amount},${sale.status},${sale.payment_method || 'N/A'}`
+        ).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "sales_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
-      title: "Export Started",
-      description: "Sales data export has been initiated",
+      title: "Export Complete",
+      description: "Sales data has been downloaded as CSV",
     });
   };
 
-  const filteredSales = sales.filter(sale =>
+  const filterSalesByDate = (sales: any[]) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const thisWeek = new Date(today);
+    thisWeek.setDate(thisWeek.getDate() - 7);
+    const thisMonth = new Date(today);
+    thisMonth.setMonth(thisMonth.getMonth() - 1);
+
+    return sales.filter(sale => {
+      const saleDate = new Date(sale.sale_date);
+      switch (dateRange) {
+        case 'today':
+          return saleDate >= today;
+        case 'yesterday':
+          return saleDate >= yesterday && saleDate < today;
+        case 'thisWeek':
+          return saleDate >= thisWeek;
+        case 'thisMonth':
+          return saleDate >= thisMonth;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filteredSales = filterSalesByDate(sales).filter(sale =>
     sale.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sale.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -84,6 +120,15 @@ const Sales = () => {
 
   const todaysOrders = sales.filter(sale => sale.sale_date === today).length;
   const monthSales = sales.reduce((total, sale) => total + Number(sale.total_amount), 0);
+
+  // Map products to match the interface expected by SalesModal
+  const mappedProducts = products.map(product => ({
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    price: Number(product.price),
+    stock: product.stock
+  }));
 
   if (salesLoading || productsLoading) {
     return (
@@ -105,13 +150,13 @@ const Sales = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Sales</h1>
-        <SalesModal products={products} onSaleComplete={handleSaleComplete} />
+        <SalesModal products={mappedProducts} onSaleComplete={handleSaleComplete} />
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6">
-          <div className="text-2xl font-bold text-gray-900">${todaysSales.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-gray-900">UGX {todaysSales.toLocaleString()}</div>
           <div className="text-sm text-gray-500">Today's Sales</div>
         </Card>
         <Card className="p-6">
@@ -119,8 +164,8 @@ const Sales = () => {
           <div className="text-sm text-gray-500">Orders Today</div>
         </Card>
         <Card className="p-6">
-          <div className="text-2xl font-bold text-gray-900">${monthSales.toFixed(2)}</div>
-          <div className="text-sm text-gray-500">This Month</div>
+          <div className="text-2xl font-bold text-gray-900">UGX {monthSales.toLocaleString()}</div>
+          <div className="text-sm text-gray-500">Total Sales</div>
         </Card>
       </div>
 
@@ -137,10 +182,19 @@ const Sales = () => {
             />
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span>Date Range</span>
-            </Button>
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-40">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="yesterday">Yesterday</SelectItem>
+                <SelectItem value="thisWeek">This Week</SelectItem>
+                <SelectItem value="thisMonth">This Month</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" className="flex items-center space-x-2" onClick={handleExport}>
               <Download className="h-4 w-4" />
               <span>Export</span>
@@ -171,6 +225,9 @@ const Sales = () => {
                   Total
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -194,7 +251,10 @@ const Sales = () => {
                     {sale.items_count}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${Number(sale.total_amount).toFixed(2)}
+                    UGX {Number(sale.total_amount).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sale.payment_method || 'Cash'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(sale.status)}`}>
@@ -203,12 +263,7 @@ const Sales = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleViewReceipt(sale)}>
-                        <Receipt className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        View
-                      </Button>
+                      <ReceiptModal sale={sale} />
                     </div>
                   </td>
                 </tr>

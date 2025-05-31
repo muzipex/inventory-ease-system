@@ -73,6 +73,7 @@ export const useSales = () => {
     items_count: number;
     status?: string;
     sale_date?: string;
+    payment_method?: string;
   }, items: Array<{
     product_id: string;
     quantity: number;
@@ -103,14 +104,20 @@ export const useSales = () => {
 
       // Update product stock
       for (const item of items) {
-        const { error: stockError } = await supabase.rpc(
-          'update_product_stock',
-          {
-            product_id: item.product_id,
-            quantity_sold: item.quantity
-          }
-        );
-        if (stockError) console.error('Failed to update stock:', stockError);
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', item.product_id)
+          .single();
+
+        if (product) {
+          const { error: stockError } = await supabase
+            .from('products')
+            .update({ stock: product.stock - item.quantity })
+            .eq('id', item.product_id);
+          
+          if (stockError) console.error('Failed to update stock:', stockError);
+        }
       }
 
       return sale;

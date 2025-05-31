@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   sku: string;
   price: number;
@@ -29,6 +30,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const { toast } = useToast();
 
   const addToCart = (product: Product) => {
@@ -52,11 +54,11 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
     }
   };
 
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId: string) => {
     setCart(cart.filter(item => item.id !== productId));
   };
 
-  const updateQuantity = (productId: number, newQuantity: number) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity === 0) {
       removeFromCart(productId);
       return;
@@ -70,6 +72,11 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
           : item
       ));
     }
+  };
+
+  const handleQuantityInput = (productId: string, value: string) => {
+    const newQuantity = parseInt(value) || 0;
+    updateQuantity(productId, newQuantity);
   };
 
   const getTotal = () => {
@@ -95,24 +102,26 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
       return;
     }
 
+    const orderNumber = `ORD-${Date.now()}`;
     const sale = {
-      id: `ORD-${Date.now()}`,
-      customer: customerName,
-      date: new Date().toISOString().split('T')[0],
-      items: cart.length,
-      total: getTotal(),
-      status: 'Completed',
+      order_id: orderNumber,
+      customer_name: customerName,
+      total_amount: getTotal(),
+      items_count: cart.length,
+      status: paymentMethod === 'credit' ? 'Pending' : 'Completed',
+      payment_method: paymentMethod,
       cart: cart
     };
 
     onSaleComplete(sale);
     setCart([]);
     setCustomerName('');
+    setPaymentMethod('cash');
     setOpen(false);
     
     toast({
       title: "Sale Completed",
-      description: `Order ${sale.id} has been processed successfully`,
+      description: `Order ${orderNumber} has been processed successfully`,
     });
   };
 
@@ -140,7 +149,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                     <div>
                       <p className="font-medium">{product.name}</p>
                       <p className="text-sm text-gray-500">
-                        ${product.price} - Stock: {product.stock}
+                        UGX {product.price.toLocaleString()} - Stock: {product.stock}
                       </p>
                     </div>
                     <Button
@@ -165,7 +174,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-gray-500">${item.price} each</p>
+                      <p className="text-sm text-gray-500">UGX {item.price.toLocaleString()} each</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -175,7 +184,14 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                       >
                         <Minus className="h-3 w-3" />
                       </Button>
-                      <span className="w-8 text-center">{item.quantity}</span>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityInput(item.id, e.target.value)}
+                        className="w-16 text-center"
+                        min="1"
+                        max={item.stock}
+                      />
                       <Button
                         size="sm"
                         variant="outline"
@@ -193,20 +209,43 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total:</span>
-                  <span>${getTotal().toFixed(2)}</span>
+                  <span>UGX {getTotal().toLocaleString()}</span>
                 </div>
               </div>
             )}
 
-            <div className="mt-4">
-              <Label htmlFor="customer">Customer Name</Label>
-              <Input
-                id="customer"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Enter customer name"
-                required
-              />
+            <div className="mt-4 space-y-4">
+              <div>
+                <Label htmlFor="customer">Customer Name</Label>
+                <Input
+                  id="customer"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="payment">Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="credit">Credit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {paymentMethod === 'credit' && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    Credit payment will be marked as pending. Follow up for payment collection.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 mt-6">
