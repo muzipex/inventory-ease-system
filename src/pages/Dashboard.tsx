@@ -24,6 +24,13 @@ const Dashboard = () => {
   const totalOrders = sales.length;
   const lowStockItems = products.filter(product => product.stock <= product.min_stock);
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  const todaysSales = sales
+    .filter(sale => sale.sale_date === today)
+    .reduce((total, sale) => total + Number(sale.total_amount), 0);
+  const todaysOrders = sales.filter(sale => sale.sale_date === today).length;
+
   const recentSales = sales.slice(0, 4);
   const lowStockAlerts = lowStockItems.slice(0, 4);
 
@@ -38,7 +45,7 @@ const Dashboard = () => {
     },
     {
       title: 'Total Sales',
-      value: `$${totalSales.toFixed(2)}`,
+      value: `UGX ${totalSales.toLocaleString()}`,
       change: '+8%',
       icon: DollarSign,
       color: 'text-green-600',
@@ -96,25 +103,27 @@ const Dashboard = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Sales</h3>
           <div className="space-y-4">
-            {recentSales.map((sale) => (
+            {recentSales.length > 0 ? recentSales.map((sale) => (
               <div key={sale.id} className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{sale.order_id}</p>
                   <p className="text-sm text-gray-500">{sale.customer_name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">${Number(sale.total_amount).toFixed(2)}</p>
+                  <p className="font-medium">UGX {Number(sale.total_amount).toLocaleString()}</p>
                   <p className="text-sm text-gray-500">Items: {sale.items_count}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500">No sales yet</p>
+            )}
           </div>
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Low Stock Alerts</h3>
           <div className="space-y-4">
-            {lowStockAlerts.map((product) => (
+            {lowStockAlerts.length > 0 ? lowStockAlerts.map((product) => (
               <div key={product.id} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -128,7 +137,9 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-500">Min: {product.min_stock}</p>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500">No low stock items</p>
+            )}
           </div>
         </Card>
       </div>

@@ -49,7 +49,7 @@ const Sales = () => {
 
       toast({
         title: "Sale Completed",
-        description: `Order ${saleData.order_id} has been processed successfully`,
+        description: `Order ${saleData.order_id} has been processed successfully. You can view and download the receipt from the sales table.`,
       });
     } catch (err) {
       toast({
@@ -231,7 +231,7 @@ const Sales = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Receipt
                 </th>
               </tr>
             </thead>
@@ -262,15 +262,23 @@ const Sales = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <ReceiptModal sale={sale} />
-                    </div>
+                    <ReceiptModal sale={sale} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {filteredSales.length === 0 && (
+          <div className="text-center py-12">
+            <Receipt className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No sales found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Try adjusting your search terms or create a new sale.
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );
