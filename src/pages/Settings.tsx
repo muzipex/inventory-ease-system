@@ -15,8 +15,8 @@ const Settings = () => {
     // Company Settings
     companyName: 'My Inventory Business',
     email: 'admin@company.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Business St, City, State 12345',
+    phone: '+256 700 123 456',
+    address: 'Kampala, Uganda',
     
     // Notification Settings
     emailNotifications: true,
@@ -26,8 +26,8 @@ const Settings = () => {
     // System Settings
     autoBackup: true,
     darkMode: false,
-    currency: 'USD',
-    taxRate: 8.5
+    currency: 'UGX',
+    taxRate: 18
   });
 
   const handleSave = () => {

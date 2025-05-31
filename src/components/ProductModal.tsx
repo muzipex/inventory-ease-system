@@ -90,7 +90,7 @@ const ProductModal = ({ product, onSave, trigger }: ProductModalProps) => {
             />
           </div>
           <div>
-            <Label htmlFor="price">Price ($)</Label>
+            <Label htmlFor="price">Price (UGX)</Label>
             <Input
               id="price"
               type="number"
