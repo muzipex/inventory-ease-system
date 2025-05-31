@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Plus, Edit } from 'lucide-react';
 
 interface Product {
-  id?: number;
+  id?: string | number;
   name: string;
   sku: string;
   category: string;
