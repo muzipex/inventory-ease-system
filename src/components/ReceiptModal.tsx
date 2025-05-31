@@ -14,6 +14,8 @@ interface Sale {
   items_count: number;
   status: string;
   payment_method?: string;
+  cash_paid?: number;
+  debit_balance?: number;
 }
 
 interface ReceiptModalProps {
@@ -23,6 +25,8 @@ interface ReceiptModalProps {
 const ReceiptModal = ({ sale }: ReceiptModalProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+
+  const isPartialPayment = sale.status === 'Partial Payment' || (sale.cash_paid !== undefined && sale.debit_balance !== undefined && sale.debit_balance > 0);
 
   const handlePrint = () => {
     const printContent = document.getElementById('receipt-content');
@@ -36,7 +40,7 @@ const ReceiptModal = ({ sale }: ReceiptModalProps) => {
   };
 
   const handleDownload = () => {
-    const receiptContent = `
+    let receiptContent = `
 RECEIPT
 =====================================
 Order ID: ${sale.order_id}
@@ -46,7 +50,17 @@ Customer: ${sale.customer_name}
 Items: ${sale.items_count}
 Payment Method: ${sale.payment_method || 'Cash'}
 Status: ${sale.status}
-=====================================
+=====================================`;
+
+    if (isPartialPayment) {
+      receiptContent += `
+PAYMENT BREAKDOWN:
+Cash Paid: UGX ${(sale.cash_paid || 0).toLocaleString()}
+Debit Balance: UGX ${(sale.debit_balance || 0).toLocaleString()}
+=====================================`;
+    }
+
+    receiptContent += `
 TOTAL: UGX ${Number(sale.total_amount).toLocaleString()}
 =====================================
 Thank you for your business!
@@ -112,6 +126,7 @@ Thank you for your business!
               <span className="font-medium">Status:</span>
               <span className={`px-2 py-1 rounded text-xs ${
                 sale.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                sale.status === 'Partial Payment' ? 'bg-orange-100 text-orange-800' :
                 sale.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-red-100 text-red-800'
               }`}>
@@ -120,14 +135,36 @@ Thank you for your business!
             </div>
           </div>
 
+          {isPartialPayment && (
+            <div className="border-t border-b py-4 space-y-2 bg-orange-50">
+              <h4 className="font-semibold text-orange-800">Payment Breakdown:</h4>
+              <div className="flex justify-between">
+                <span className="font-medium text-orange-700">Cash Paid:</span>
+                <span className="text-orange-700">UGX {(sale.cash_paid || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-red-700">Debit Balance:</span>
+                <span className="text-red-700">UGX {(sale.debit_balance || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+
           <div className="text-center">
             <div className="text-2xl font-bold">
               TOTAL: UGX {Number(sale.total_amount).toLocaleString()}
             </div>
+            {isPartialPayment && (
+              <div className="text-sm text-red-600 mt-2">
+                Outstanding Balance: UGX {(sale.debit_balance || 0).toLocaleString()}
+              </div>
+            )}
           </div>
 
           <div className="text-center text-sm text-gray-600 border-t pt-4">
             <p>Thank you for your business!</p>
+            {isPartialPayment && (
+              <p className="text-red-600 font-medium">Please settle outstanding balance soon.</p>
+            )}
             <p>Generated on {new Date().toLocaleString()}</p>
           </div>
         </div>

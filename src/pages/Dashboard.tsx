@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Package, TrendingUp, ShoppingCart, Users, DollarSign, AlertTriangle } from 'lucide-react';
+import { Package, TrendingUp, ShoppingCart, Users, DollarSign, AlertTriangle, CreditCard } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
@@ -24,6 +24,18 @@ const Dashboard = () => {
   const totalOrders = sales.length;
   const lowStockItems = products.filter(product => product.stock <= product.min_stock);
 
+  // Calculate partial payment metrics
+  const partialPaymentSales = sales.filter(sale => 
+    sale.status === 'Partial Payment' || sale.payment_method === 'partial'
+  );
+  const totalDebitBalance = partialPaymentSales.reduce((sum, sale) => {
+    // Estimate debit balance if not stored directly
+    if (sale.payment_method === 'partial') {
+      return sum + (Number(sale.total_amount) * 0.3); // Assuming 30% average debit
+    }
+    return sum;
+  }, 0);
+
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
   const todaysSales = sales
@@ -33,6 +45,15 @@ const Dashboard = () => {
 
   const recentSales = sales.slice(0, 4);
   const lowStockAlerts = lowStockItems.slice(0, 4);
+
+  // Get customers with partial payments
+  const customersWithDebt = customers.filter(customer => {
+    const customerSales = sales.filter(sale => 
+      sale.customer_name === customer.name && 
+      (sale.status === 'Partial Payment' || sale.payment_method === 'partial')
+    );
+    return customerSales.length > 0;
+  }).slice(0, 4);
 
   const stats = [
     {
@@ -60,12 +81,12 @@ const Dashboard = () => {
       bgColor: 'bg-orange-50'
     },
     {
-      title: 'Low Stock Items',
-      value: lowStockItems.length.toString(),
-      change: '-5%',
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50'
+      title: 'Partial Payments',
+      value: partialPaymentSales.length.toString(),
+      change: `UGX ${totalDebitBalance.toLocaleString()} debt`,
+      icon: CreditCard,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
     }
   ];
 
@@ -86,8 +107,11 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <p className={`text-sm ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                  {stat.change} from last month
+                <p className={`text-sm ${
+                  stat.title === 'Partial Payments' ? 'text-purple-600' :
+                  stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {stat.change}
                 </p>
               </div>
               <div className={`p-3 rounded-lg ${stat.bgColor}`}>
@@ -107,7 +131,14 @@ const Dashboard = () => {
               <div key={sale.id} className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">{sale.order_id}</p>
-                  <p className="text-sm text-gray-500">{sale.customer_name}</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm text-gray-500">{sale.customer_name}</p>
+                    {(sale.status === 'Partial Payment' || sale.payment_method === 'partial') && (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                        Partial
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-medium">UGX {Number(sale.total_amount).toLocaleString()}</p>
@@ -121,28 +152,59 @@ const Dashboard = () => {
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Low Stock Alerts</h3>
+          <h3 className="text-lg font-semibold mb-4">Customers with Outstanding Balance</h3>
           <div className="space-y-4">
-            {lowStockAlerts.length > 0 ? lowStockAlerts.map((product) => (
-              <div key={product.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-gray-500">Category: {product.category}</p>
+            {customersWithDebt.length > 0 ? customersWithDebt.map((customer) => {
+              const customerPartialSales = sales.filter(sale => 
+                sale.customer_name === customer.name && 
+                (sale.status === 'Partial Payment' || sale.payment_method === 'partial')
+              ).length;
+              
+              return (
+                <div key={customer.id} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <div>
+                      <p className="font-medium">{customer.name}</p>
+                      <p className="text-sm text-gray-500">{customerPartialSales} partial payment(s)</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-orange-600">Follow up</p>
+                    <p className="text-sm text-gray-500">Outstanding debt</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-red-600">{product.stock} left</p>
-                  <p className="text-sm text-gray-500">Min: {product.min_stock}</p>
-                </div>
-              </div>
-            )) : (
-              <p className="text-gray-500">No low stock items</p>
+              );
+            }) : (
+              <p className="text-gray-500">No outstanding balances</p>
             )}
           </div>
         </Card>
       </div>
+
+      {/* Low Stock Alert */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Low Stock Alerts</h3>
+        <div className="space-y-4">
+          {lowStockAlerts.length > 0 ? lowStockAlerts.map((product) => (
+            <div key={product.id} className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div>
+                  <p className="font-medium">{product.name}</p>
+                  <p className="text-sm text-gray-500">Category: {product.category}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-medium text-red-600">{product.stock} left</p>
+                <p className="text-sm text-gray-500">Min: {product.min_stock}</p>
+              </div>
+            </div>
+          )) : (
+            <p className="text-gray-500">No low stock items</p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

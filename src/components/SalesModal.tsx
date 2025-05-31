@@ -31,6 +31,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [cashPaid, setCashPaid] = useState('');
   const { toast } = useToast();
 
   const addToCart = (product: Product) => {
@@ -83,6 +84,13 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
+  const resetForm = () => {
+    setCart([]);
+    setCustomerName('');
+    setPaymentMethod('cash');
+    setCashPaid('');
+  };
+
   const handleSaleComplete = () => {
     if (cart.length === 0) {
       toast({
@@ -102,21 +110,51 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
       return;
     }
 
+    const total = getTotal();
+    let cashAmount = 0;
+    let debitBalance = 0;
+    let status = 'Completed';
+
+    if (paymentMethod === 'partial') {
+      const cashPaidAmount = parseFloat(cashPaid) || 0;
+      if (cashPaidAmount <= 0) {
+        toast({
+          title: "Invalid Cash Amount",
+          description: "Please enter a valid cash amount",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (cashPaidAmount >= total) {
+        toast({
+          title: "Cash Amount Too High",
+          description: "Cash amount cannot be greater than or equal to total. Use 'Cash' payment method instead.",
+          variant: "destructive"
+        });
+        return;
+      }
+      cashAmount = cashPaidAmount;
+      debitBalance = total - cashPaidAmount;
+      status = 'Partial Payment';
+    }
+
     const orderNumber = `ORD-${Date.now()}`;
     const sale = {
       order_id: orderNumber,
       customer_name: customerName,
-      total_amount: getTotal(),
+      total_amount: total,
       items_count: cart.length,
-      status: paymentMethod === 'credit' ? 'Pending' : 'Completed',
+      status: status,
       payment_method: paymentMethod,
+      cash_paid: cashAmount,
+      debit_balance: debitBalance,
       cart: cart
     };
 
+    console.log('Completing sale:', sale);
+
     onSaleComplete(sale);
-    setCart([]);
-    setCustomerName('');
-    setPaymentMethod('cash');
+    resetForm();
     setOpen(false);
     
     toast({
@@ -124,6 +162,8 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
       description: `Order ${orderNumber} has been processed successfully`,
     });
   };
+
+  const availableProducts = products.filter(p => p.stock > 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -143,7 +183,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Available Products</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {products.filter(p => p.stock > 0).map(product => (
+              {availableProducts.length > 0 ? availableProducts.map(product => (
                 <Card key={product.id} className="p-3">
                   <div className="flex justify-between items-center">
                     <div>
@@ -161,7 +201,9 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                     </Button>
                   </div>
                 </Card>
-              ))}
+              )) : (
+                <p className="text-gray-500">No products available in stock</p>
+              )}
             </div>
           </div>
 
@@ -233,16 +275,42 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="credit">Credit</SelectItem>
+                    <SelectItem value="cash">Cash (Full Payment)</SelectItem>
+                    <SelectItem value="partial">Partial Cash Payment</SelectItem>
+                    <SelectItem value="credit">Credit (No Cash)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {paymentMethod === 'partial' && (
+                <div>
+                  <Label htmlFor="cashPaid">Cash Amount Paid</Label>
+                  <Input
+                    id="cashPaid"
+                    type="number"
+                    value={cashPaid}
+                    onChange={(e) => setCashPaid(e.target.value)}
+                    placeholder="Enter cash amount paid"
+                    min="1"
+                    max={getTotal() - 1}
+                  />
+                  {cashPaid && (
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        Cash Paid: UGX {parseFloat(cashPaid || '0').toLocaleString()}
+                      </p>
+                      <p className="text-sm text-blue-800">
+                        Debit Balance: UGX {(getTotal() - parseFloat(cashPaid || '0')).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {paymentMethod === 'credit' && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800">
-                    Credit payment will be marked as pending. Follow up for payment collection.
+                    Full credit payment - entire amount will be marked as debit balance.
                   </p>
                 </div>
               )}

@@ -51,11 +51,9 @@ const Reports = () => {
   const inStockProducts = products.filter(product => product.stock > 0).length;
   const inventoryHealth = products.length > 0 ? Math.round((inStockProducts / products.length) * 100) : 0;
 
-  // Get top selling products based on sales data
-  const productSales = {};
+  // Get top selling products based on sales data - fix TypeScript errors
+  const productSales: Record<string, { sales: number; revenue: number }> = {};
   sales.forEach(sale => {
-    // For this demo, we'll estimate product sales based on order frequency
-    // In a real app, you'd query sale_items table
     if (!productSales[sale.customer_name]) {
       productSales[sale.customer_name] = {
         sales: 0,

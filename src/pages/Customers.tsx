@@ -49,13 +49,13 @@ const Customers = () => {
         </Card>
         <Card className="p-6">
           <div className="text-2xl font-bold text-gray-900">
-            ${customers.reduce((sum, c) => sum + Number(c.total_spent), 0).toFixed(2)}
+            UGX {customers.reduce((sum, c) => sum + Number(c.total_spent), 0).toLocaleString()}
           </div>
           <div className="text-sm text-gray-500">Total Revenue</div>
         </Card>
         <Card className="p-6">
           <div className="text-2xl font-bold text-gray-900">
-            {customers.length > 0 ? Math.round(customers.reduce((sum, c) => sum + Number(c.total_spent), 0) / customers.length) : 0}
+            UGX {customers.length > 0 ? Math.round(customers.reduce((sum, c) => sum + Number(c.total_spent), 0) / customers.length).toLocaleString() : 0}
           </div>
           <div className="text-sm text-gray-500">Avg. Order Value</div>
         </Card>
@@ -138,7 +138,7 @@ const Customers = () => {
                     {customer.total_orders}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${Number(customer.total_spent).toFixed(2)}
+                    UGX {Number(customer.total_spent).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
