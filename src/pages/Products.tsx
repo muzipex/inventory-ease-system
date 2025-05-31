@@ -11,7 +11,7 @@ import { useProducts } from '@/hooks/useProducts';
 const Products = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
-  const { products, loading, error, updateProduct, deleteProduct } = useProducts();
+  const { products, loading, error, addProduct, updateProduct, deleteProduct } = useProducts();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -42,8 +42,25 @@ const Products = () => {
           title: "Product Updated",
           description: `${productData.name} has been updated successfully`,
         });
+      } else {
+        // Add new product
+        await addProduct({
+          name: productData.name,
+          sku: productData.sku,
+          category: productData.category,
+          price: productData.price,
+          stock: productData.stock,
+          min_stock: productData.minStock,
+          status: productData.stock > productData.minStock ? 'In Stock' : 
+                  productData.stock > 0 ? 'Low Stock' : 'Out of Stock'
+        });
+        toast({
+          title: "Product Added",
+          description: `${productData.name} has been added successfully`,
+        });
       }
     } catch (err) {
+      console.error('Error saving product:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : "Failed to save product",
@@ -61,6 +78,7 @@ const Products = () => {
         description: `${product?.name} has been deleted successfully`,
       });
     } catch (err) {
+      console.error('Error deleting product:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : "Failed to delete product",
@@ -167,7 +185,7 @@ const Products = () => {
                     {product.category}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${Number(product.price).toFixed(2)}
+                    UGX {Number(product.price).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.stock}
