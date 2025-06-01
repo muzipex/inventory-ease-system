@@ -28,6 +28,51 @@ const ReceiptModal = ({ sale }: ReceiptModalProps) => {
 
   const isPartialPayment = sale.status === 'Partial Payment' || (sale.cash_paid !== undefined && sale.debit_balance !== undefined && sale.debit_balance > 0);
 
+  const convertNumberToWords = (amount: number): string => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const thousands = ['', 'Thousand', 'Million', 'Billion'];
+
+    if (amount === 0) return 'Zero Shillings only';
+
+    const convertHundreds = (num: number): string => {
+      let result = '';
+      
+      if (num >= 100) {
+        result += ones[Math.floor(num / 100)] + ' Hundred ';
+        num %= 100;
+      }
+      
+      if (num >= 20) {
+        result += tens[Math.floor(num / 10)] + ' ';
+        num %= 10;
+      } else if (num >= 10) {
+        result += teens[num - 10] + ' ';
+        return result;
+      }
+      
+      if (num > 0) {
+        result += ones[num] + ' ';
+      }
+      
+      return result;
+    };
+
+    let result = '';
+    let thousandCounter = 0;
+    
+    while (amount > 0) {
+      if (amount % 1000 !== 0) {
+        result = convertHundreds(amount % 1000) + thousands[thousandCounter] + ' ' + result;
+      }
+      amount = Math.floor(amount / 1000);
+      thousandCounter++;
+    }
+    
+    return result.trim() + ' Shillings only';
+  };
+
   const handlePrint = () => {
     const printContent = document.getElementById('receipt-content');
     if (printContent) {
@@ -41,13 +86,21 @@ const ReceiptModal = ({ sale }: ReceiptModalProps) => {
 
   const handleDownload = () => {
     let receiptContent = `
-RECEIPT
+NGABIRANO'S BLOCKS AND CONCRETE PRODUCTS
 =====================================
-Order ID: ${sale.order_id}
+NGABIRANO Location: Bukasa B, Vlakiso off Kiseka road 800m Watoto Road.
+Sales outlet: Sentema road just after Bukasa Trading Centre
+Tel:0706720952, Whatsapp:078200404
+
+INVOICE
+=====================================
 Date: ${sale.sale_date}
-Customer: ${sale.customer_name}
-=====================================
+No.: ${sale.order_id}
+
+MS: ${sale.customer_name}
+
 Items: ${sale.items_count}
+Total: UGX ${Number(sale.total_amount).toLocaleString()}
 Payment Method: ${sale.payment_method || 'Cash'}
 Status: ${sale.status}
 =====================================`;
@@ -61,22 +114,23 @@ Debit Balance: UGX ${(sale.debit_balance || 0).toLocaleString()}
     }
 
     receiptContent += `
-TOTAL: UGX ${Number(sale.total_amount).toLocaleString()}
-=====================================
-Thank you for your business!
+Amount in words...${convertNumberToWords(Number(sale.total_amount))}
+
+Signed...
+NGABIRANO'S BLOCKS AND CONCRETE PRODUCTS
     `;
 
     const element = document.createElement('a');
     const file = new Blob([receiptContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `receipt-${sale.order_id}.txt`;
+    element.download = `invoice-${sale.order_id}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 
     toast({
-      title: "Receipt Downloaded",
-      description: `Receipt for ${sale.order_id} has been downloaded`,
+      title: "Invoice Downloaded",
+      description: `Invoice for ${sale.order_id} has been downloaded`,
     });
   };
 
@@ -87,98 +141,82 @@ Thank you for your business!
           <Receipt className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-gradient-to-br from-white to-gray-50">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            Professional Receipt
-          </DialogTitle>
+          <DialogTitle>Invoice</DialogTitle>
         </DialogHeader>
         
-        <div id="receipt-content" className="space-y-4 p-6 bg-white rounded-lg shadow-sm border">
-          <div className="text-center border-b-2 border-gray-200 pb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              <h2 className="text-2xl font-bold">SALES RECEIPT</h2>
+        <div id="receipt-content" className="bg-white p-6" style={{ fontFamily: 'Arial, sans-serif', fontSize: '14px', lineHeight: '1.3' }}>
+          <div className="text-center mb-2 font-bold">
+            <div className="text-base uppercase mb-1">
+              NGABIRANO'S BLOCKS AND<br />CONCRETE PRODUCTS
             </div>
-            <p className="text-sm text-gray-600 mt-1">Inventory Management System</p>
-            <div className="w-16 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto mt-2"></div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-1">
-              <span className="font-semibold text-gray-700">Order ID:</span>
-              <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{sale.order_id}</span>
-            </div>
-            <div className="flex justify-between items-center py-1">
-              <span className="font-semibold text-gray-700">Date:</span>
-              <span className="text-gray-800">{sale.sale_date}</span>
-            </div>
-            <div className="flex justify-between items-center py-1">
-              <span className="font-semibold text-gray-700">Customer:</span>
-              <span className="text-gray-800 font-medium">{sale.customer_name}</span>
+            <div className="text-xs text-center mb-3">
+              NGABIRANO Location: Bukasa B, Vlakiso off Kiseka road 800m Watoto Road.<br />
+              Sales outlet: Sentema road just after Bukasa Trading Centre<br />
+              Tel:0706720952, Whatsapp:078200404
             </div>
           </div>
 
-          <div className="border-t border-b border-gray-200 py-4 space-y-3 bg-gray-50 rounded-lg px-4">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-700">Items Count:</span>
-              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">{sale.items_count}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-700">Payment Method:</span>
-              <span className="capitalize font-medium text-gray-800">{sale.payment_method || 'Cash'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-700">Status:</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                sale.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                sale.status === 'Partial Payment' ? 'bg-orange-100 text-orange-800' :
-                sale.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {sale.status}
-              </span>
-            </div>
+          <div className="font-bold text-center underline my-2 text-base">INVOICE</div>
+
+          <div className="flex justify-between mb-2">
+            <div>Date: {sale.sale_date}</div>
+            <div>No.: {sale.order_id}</div>
           </div>
+
+          <div className="mb-2">MS: {sale.customer_name}</div>
+
+          <table className="w-full border-collapse my-2 text-sm" style={{ border: '1px solid #000' }}>
+            <thead>
+              <tr>
+                <th className="border border-black p-1 bg-gray-100 text-left">SN</th>
+                <th className="border border-black p-1 bg-gray-100 text-left">Description</th>
+                <th className="border border-black p-1 bg-gray-100 text-left">Qty</th>
+                <th className="border border-black p-1 bg-gray-100 text-left">Unit Price</th>
+                <th className="border border-black p-1 bg-gray-100 text-left">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-black p-1">1</td>
+                <td className="border border-black p-1">
+                  Sales Items ({sale.payment_method === 'credit' || isPartialPayment ? 'Credit sale' : 'Cash sale'})
+                </td>
+                <td className="border border-black p-1">{sale.items_count}</td>
+                <td className="border border-black p-1">Various</td>
+                <td className="border border-black p-1">UGX {Number(sale.total_amount).toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
 
           {isPartialPayment && (
-            <div className="border-2 border-orange-200 rounded-lg p-4 bg-gradient-to-r from-orange-50 to-yellow-50">
-              <h4 className="font-bold text-orange-800 mb-3 flex items-center">
-                <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                Payment Breakdown
-              </h4>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-orange-700">Cash Paid:</span>
-                  <span className="font-bold text-green-700">UGX {(sale.cash_paid || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-orange-700">Outstanding Balance:</span>
-                  <span className="font-bold text-red-700">UGX {(sale.debit_balance || 0).toLocaleString()}</span>
-                </div>
+            <div className="my-2 p-2 border border-orange-300 rounded bg-orange-50">
+              <div className="font-bold text-orange-800 mb-1">Payment Breakdown:</div>
+              <div className="text-sm">
+                <div>Cash Paid: UGX {(sale.cash_paid || 0).toLocaleString()}</div>
+                <div>Outstanding Balance: UGX {(sale.debit_balance || 0).toLocaleString()}</div>
               </div>
             </div>
           )}
 
-          <div className="text-center bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg p-4">
-            <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-              TOTAL: UGX {Number(sale.total_amount).toLocaleString()}
-            </div>
-            {isPartialPayment && (
-              <div className="text-sm text-red-600 mt-2 font-medium">
-                ⚠️ Outstanding Balance: UGX {(sale.debit_balance || 0).toLocaleString()}
-              </div>
-            )}
+          <div className="mt-1 text-sm italic">
+            Amount in words...{convertNumberToWords(Number(sale.total_amount))}
           </div>
 
-          <div className="text-center text-sm text-gray-600 border-t-2 border-gray-200 pt-4 space-y-2">
-            <p className="font-medium text-gray-800">Thank you for your business! 🙏</p>
-            {isPartialPayment && (
-              <p className="text-red-600 font-medium bg-red-50 p-2 rounded">
-                📋 Please settle outstanding balance at your earliest convenience.
-              </p>
-            )}
-            <p className="text-xs text-gray-500">Generated on {new Date().toLocaleString()}</p>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto"></div>
+          <div className="mt-8 text-center font-bold">
+            <div className="mb-3">Signed...</div>
+            <div className="uppercase">NGABIRANO'S BLOCKS AND CONCRETE PRODUCTS</div>
+          </div>
+
+          {isPartialPayment && (
+            <div className="mt-4 text-center text-red-600 font-medium bg-red-50 p-2 rounded">
+              ⚠️ Outstanding Balance: UGX {(sale.debit_balance || 0).toLocaleString()}
+            </div>
+          )}
+
+          <div className="text-center text-xs text-gray-500 mt-4">
+            Generated on {new Date().toLocaleString()}
           </div>
         </div>
 
@@ -188,7 +226,7 @@ Thank you for your business!
             className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all duration-200"
           >
             <Printer className="h-4 w-4" />
-            <span>Print Receipt</span>
+            <span>Print Invoice</span>
           </Button>
           <Button 
             onClick={handleDownload} 
