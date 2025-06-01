@@ -138,7 +138,7 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200 bg-zinc-100">
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Customers with Outstanding Balance
           </h3>
@@ -164,7 +164,7 @@ const Dashboard = () => {
       </div>
 
       {/* Low Stock Alert */}
-      <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+      <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200 bg-violet-50">
         <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
           Low Stock Alerts
         </h3>
