@@ -85,7 +85,7 @@ const Dashboard = () => {
     color: 'text-purple-600',
     bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100'
   }];
-  return <div className="space-y-6 bg-violet-100 rounded-full">
+  return <div className="space-y-6 rounded-full bg-slate-300">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
           Dashboard
@@ -97,7 +97,7 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => <Card key={index} className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+        {stats.map((stat, index) => <Card key={index} className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-cyan-50">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
@@ -115,7 +115,7 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200 bg-stone-200">
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Recent Sales
           </h3>
