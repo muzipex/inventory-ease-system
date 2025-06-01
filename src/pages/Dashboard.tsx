@@ -85,7 +85,7 @@ const Dashboard = () => {
     color: 'text-purple-600',
     bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100'
   }];
-  return <div className="space-y-6 rounded-sm">
+  return <div className="space-y-6 rounded-lg bg-violet-100">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
           Dashboard
