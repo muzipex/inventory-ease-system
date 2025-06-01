@@ -107,7 +107,7 @@ const Layout = ({
       </header>
 
       {/* Main content */}
-      <main className="py-6">
+      <main className="py-6 bg-[#7ae1e6]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-[#dfd9ee]">
           {children}
         </div>
