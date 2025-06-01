@@ -58,13 +58,12 @@ const Layout = ({
             <div className="flex items-center">
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-25 dark:opacity-40"></div>
-                <div className="relative py-2 border border-blue-200 dark:border-gray-600 transition-colors duration-300 px-[12px] bg-transparent rounded-2xl">
+                <div className="relative bg-white dark:bg-gray-800 rounded-lg py-2 border border-blue-200 dark:border-gray-600 transition-colors duration-300 px-[12px]">
                   <div className="flex items-center space-x-2">
                     <div className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-blue-800 dark:from-blue-400 dark:via-purple-400 dark:to-blue-300">
-                      <span className="text-lg font-black tracking-tight px-0">NGABIRANO BLOCKS</span>
+                      <span className="text-lg font-black tracking-tight">NGABIRANO</span>
                     </div>
-                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wide uppercase border-l border-gray-300 dark:border-gray-600 pl-2 px-0">
-                  </div>
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wide uppercase border-l border-gray-300 dark:border-gray-600 pl-2">BLOCKS</div>
                   </div>
                 </div>
               </div>
@@ -107,8 +106,8 @@ const Layout = ({
       </header>
 
       {/* Main content */}
-      <main className="py-6 bg-[#7ae1e6]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-[#dfd9ee]">
+      <main className="py-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
