@@ -52,7 +52,7 @@ const Layout = ({
   return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 transition-colors duration-300">
       {/* Header */}
       <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg border-b border-blue-100 dark:border-gray-700 transition-colors duration-300">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-slate-300">
           <div className="flex justify-between items-center h-16 bg-slate-300">
             {/* Compact Logo */}
             <div className="flex items-center">
