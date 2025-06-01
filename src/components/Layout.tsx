@@ -49,7 +49,7 @@ const Layout = ({
     href: '/settings',
     icon: Settings
   }];
-  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 transition-colors duration-300">
+  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 transition-colors duration-300 bg-teal-100">
       {/* Header */}
       <header className="backdrop-blur-sm shadow-lg border-b border-blue-100 dark:border-gray-700 transition-colors duration-300 bg-slate-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-slate-300">
