@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Calendar, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,15 +20,15 @@ const Sales = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300';
       case 'Pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300';
       case 'Partial Payment':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300';
       case 'Cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300';
     }
   };
 
@@ -137,7 +136,9 @@ const Sales = () => {
   if (salesLoading || productsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Loading...
+        </div>
       </div>
     );
   }
@@ -153,28 +154,36 @@ const Sales = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Sales</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          Sales Management
+        </h1>
         <SalesModal products={mappedProducts} onSaleComplete={handleSaleComplete} />
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-          <div className="text-2xl font-bold text-gray-900">UGX {todaysSales.toLocaleString()}</div>
-          <div className="text-sm text-gray-500">Today's Sales</div>
+        <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+            UGX {todaysSales.toLocaleString()}
+          </div>
+          <div className="text-sm text-gray-600">Today's Sales</div>
         </Card>
-        <Card className="p-6">
-          <div className="text-2xl font-bold text-gray-900">{todaysOrders}</div>
-          <div className="text-sm text-gray-500">Orders Today</div>
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            {todaysOrders}
+          </div>
+          <div className="text-sm text-gray-600">Orders Today</div>
         </Card>
-        <Card className="p-6">
-          <div className="text-2xl font-bold text-gray-900">UGX {monthSales.toLocaleString()}</div>
-          <div className="text-sm text-gray-500">Total Sales</div>
+        <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+            UGX {monthSales.toLocaleString()}
+          </div>
+          <div className="text-sm text-gray-600">Total Sales</div>
         </Card>
       </div>
 
       {/* Search and Filter Bar */}
-      <Card className="p-4">
+      <Card className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 border-0 shadow-md">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -182,12 +191,12 @@ const Sales = () => {
               placeholder="Search by order ID or customer name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border-0 bg-white shadow-sm"
             />
           </div>
           <div className="flex space-x-2">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40 border-0 bg-white shadow-sm">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -199,7 +208,11 @@ const Sales = () => {
                 <SelectItem value="thisMonth">This Month</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" className="flex items-center space-x-2" onClick={handleExport}>
+            <Button 
+              variant="outline" 
+              className="flex items-center space-x-2 border-0 bg-white shadow-sm hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100" 
+              onClick={handleExport}
+            >
               <Download className="h-4 w-4" />
               <span>Export</span>
             </Button>
@@ -208,10 +221,10 @@ const Sales = () => {
       </Card>
 
       {/* Sales Table */}
-      <Card>
+      <Card className="shadow-md hover:shadow-lg transition-all duration-200">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order ID
@@ -241,7 +254,7 @@ const Sales = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredSales.map((sale) => (
-                <tr key={sale.id} className="hover:bg-gray-50">
+                <tr key={sale.id} className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {sale.order_id}
                   </td>
