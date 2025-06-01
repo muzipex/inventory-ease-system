@@ -99,7 +99,9 @@ export const useSales = () => {
         items_count: saleData.items_count,
         status: saleData.status || 'Completed',
         sale_date: saleData.sale_date || new Date().toISOString().split('T')[0],
-        payment_method: saleData.payment_method || 'cash'
+        payment_method: saleData.payment_method || 'cash',
+        cash_paid: saleData.cash_paid || null,
+        debit_balance: saleData.debit_balance || null
       };
 
       console.log('Inserting sale:', saleToInsert);
@@ -164,57 +166,31 @@ export const useSales = () => {
         }
       }
 
-      // Update customer record if partial payment
-      if (saleData.cash_paid !== undefined && saleData.debit_balance !== undefined && saleData.debit_balance > 0) {
-        console.log('Updating customer with partial payment data');
-        
-        // Check if customer exists
-        const { data: existingCustomer } = await supabase
+      // Update customer record
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('name', saleData.customer_name)
+        .single();
+
+      // For partial payments, only add cash_paid to total_spent
+      const amountToAdd = saleData.cash_paid !== undefined ? saleData.cash_paid : saleData.total_amount;
+
+      const customerData = {
+        name: saleData.customer_name,
+        total_orders: (existingCustomer?.total_orders || 0) + 1,
+        total_spent: (existingCustomer?.total_spent || 0) + amountToAdd
+      };
+
+      if (existingCustomer) {
+        await supabase
           .from('customers')
-          .select('*')
-          .eq('name', saleData.customer_name)
-          .single();
-
-        const customerData = {
-          name: saleData.customer_name,
-          total_orders: (existingCustomer?.total_orders || 0) + 1,
-          total_spent: (existingCustomer?.total_spent || 0) + saleData.cash_paid
-        };
-
-        if (existingCustomer) {
-          await supabase
-            .from('customers')
-            .update(customerData)
-            .eq('id', existingCustomer.id);
-        } else {
-          await supabase
-            .from('customers')
-            .insert(customerData);
-        }
+          .update(customerData)
+          .eq('id', existingCustomer.id);
       } else {
-        // Update customer record normally
-        const { data: existingCustomer } = await supabase
+        await supabase
           .from('customers')
-          .select('*')
-          .eq('name', saleData.customer_name)
-          .single();
-
-        const customerData = {
-          name: saleData.customer_name,
-          total_orders: (existingCustomer?.total_orders || 0) + 1,
-          total_spent: (existingCustomer?.total_spent || 0) + saleData.total_amount
-        };
-
-        if (existingCustomer) {
-          await supabase
-            .from('customers')
-            .update(customerData)
-            .eq('id', existingCustomer.id);
-        } else {
-          await supabase
-            .from('customers')
-            .insert(customerData);
-        }
+          .insert(customerData);
       }
 
       return sale;

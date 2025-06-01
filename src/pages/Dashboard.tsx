@@ -26,11 +26,16 @@ const Dashboard = () => {
 
   // Calculate partial payment metrics
   const partialPaymentSales = sales.filter(sale => 
-    sale.status === 'Partial Payment' || sale.payment_method === 'partial'
+    sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial'
   );
   const totalDebitBalance = partialPaymentSales.reduce((sum, sale) => {
+    // Use debit_balance if available, otherwise estimate
+    const debitBalance = (sale as any).debit_balance;
+    if (debitBalance) {
+      return sum + Number(debitBalance);
+    }
     // Estimate debit balance if not stored directly
-    if (sale.payment_method === 'partial') {
+    if ((sale as any).payment_method === 'partial') {
       return sum + (Number(sale.total_amount) * 0.3); // Assuming 30% average debit
     }
     return sum;
@@ -50,7 +55,7 @@ const Dashboard = () => {
   const customersWithDebt = customers.filter(customer => {
     const customerSales = sales.filter(sale => 
       sale.customer_name === customer.name && 
-      (sale.status === 'Partial Payment' || sale.payment_method === 'partial')
+      (sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial')
     );
     return customerSales.length > 0;
   }).slice(0, 4);
@@ -133,7 +138,7 @@ const Dashboard = () => {
                   <p className="font-medium">{sale.order_id}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm text-gray-500">{sale.customer_name}</p>
-                    {(sale.status === 'Partial Payment' || sale.payment_method === 'partial') && (
+                    {(sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial') && (
                       <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
                         Partial
                       </span>
@@ -157,7 +162,7 @@ const Dashboard = () => {
             {customersWithDebt.length > 0 ? customersWithDebt.map((customer) => {
               const customerPartialSales = sales.filter(sale => 
                 sale.customer_name === customer.name && 
-                (sale.status === 'Partial Payment' || sale.payment_method === 'partial')
+                (sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial')
               ).length;
               
               return (

@@ -24,6 +24,8 @@ const Sales = () => {
         return 'bg-green-100 text-green-800';
       case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
+      case 'Partial Payment':
+        return 'bg-orange-100 text-orange-800';
       case 'Cancelled':
         return 'bg-red-100 text-red-800';
       default:
@@ -39,7 +41,9 @@ const Sales = () => {
         total_amount: saleData.total_amount,
         items_count: saleData.cart.length,
         status: saleData.status,
-        payment_method: saleData.payment_method
+        payment_method: saleData.payment_method,
+        cash_paid: saleData.cash_paid || null,
+        debit_balance: saleData.debit_balance || null
       }, saleData.cart.map((item: any) => ({
         product_id: item.id,
         quantity: item.quantity,
@@ -64,7 +68,7 @@ const Sales = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Order ID,Customer,Date,Items,Total,Status,Payment Method\n"
       + filteredSales.map(sale => 
-          `${sale.order_id},${sale.customer_name},${sale.sale_date},${sale.items_count},${sale.total_amount},${sale.status},${sale.payment_method || 'N/A'}`
+          `${sale.order_id},${sale.customer_name},${sale.sale_date},${sale.items_count},${sale.total_amount},${sale.status},${(sale as any).payment_method || 'N/A'}`
         ).join("\n");
 
     const encodedUri = encodeURI(csvContent);
@@ -254,7 +258,7 @@ const Sales = () => {
                     UGX {Number(sale.total_amount).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.payment_method || 'Cash'}
+                    {(sale as any).payment_method || 'Cash'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(sale.status)}`}>

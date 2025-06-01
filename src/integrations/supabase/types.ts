@@ -374,33 +374,42 @@ export type Database = {
       }
       sales: {
         Row: {
+          cash_paid: number | null
           created_at: string
           customer_name: string
+          debit_balance: number | null
           id: string
           items_count: number
           order_id: string
+          payment_method: string | null
           sale_date: string
           status: string
           total_amount: number
           updated_at: string
         }
         Insert: {
+          cash_paid?: number | null
           created_at?: string
           customer_name: string
+          debit_balance?: number | null
           id?: string
           items_count: number
           order_id: string
+          payment_method?: string | null
           sale_date?: string
           status?: string
           total_amount: number
           updated_at?: string
         }
         Update: {
+          cash_paid?: number | null
           created_at?: string
           customer_name?: string
+          debit_balance?: number | null
           id?: string
           items_count?: number
           order_id?: string
+          payment_method?: string | null
           sale_date?: string
           status?: string
           total_amount?: number
