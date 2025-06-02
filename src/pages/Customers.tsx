@@ -4,16 +4,35 @@ import { Search, Filter, User, Mail, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CustomerAccountModal from '@/components/CustomerAccountModal';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useSales } from '@/hooks/useSales';
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('name');
   const { customers, loading, error } = useCustomers();
+  const { sales } = useSales();
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCustomers = customers
+    .filter(customer =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.email && customer.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (customer.phone && customer.phone.includes(searchTerm))
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'orders':
+          return b.total_orders - a.total_orders;
+        case 'spent':
+          return Number(b.total_spent) - Number(a.total_spent);
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
 
   if (loading) {
     return (
@@ -35,6 +54,7 @@ const Customers = () => {
 
   const totalRevenue = customers.reduce((sum, c) => sum + Number(c.total_spent), 0);
   const averageOrderValue = customers.length > 0 ? Math.round(totalRevenue / customers.reduce((sum, c) => sum + c.total_orders, 0)) : 0;
+  const activeCustomers = customers.filter(c => c.total_orders > 0).length;
 
   return (
     <div className="space-y-6">
@@ -45,7 +65,7 @@ const Customers = () => {
       </div>
 
       {/* Customer Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
           <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
             {customers.length}
@@ -54,12 +74,18 @@ const Customers = () => {
         </Card>
         <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
           <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+            {activeCustomers}
+          </div>
+          <div className="text-sm text-gray-600">Active Customers</div>
+        </Card>
+        <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
             UGX {totalRevenue.toLocaleString()}
           </div>
           <div className="text-sm text-gray-600">Total Revenue</div>
         </Card>
-        <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+        <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
             UGX {averageOrderValue.toLocaleString()}
           </div>
           <div className="text-sm text-gray-600">Avg. Order Value</div>
@@ -72,16 +98,25 @@ const Customers = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Search customers by name or email..."
+              placeholder="Search customers by name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 border-0 bg-white shadow-sm"
             />
           </div>
-          <Button variant="outline" className="flex items-center space-x-2 border-0 bg-white shadow-sm">
-            <Filter className="h-4 w-4" />
-            <span>Filter</span>
-          </Button>
+          <div className="flex space-x-2">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-40 border-0 bg-white shadow-sm">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Sort by Name</SelectItem>
+                <SelectItem value="orders">Sort by Orders</SelectItem>
+                <SelectItem value="spent">Sort by Spending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </Card>
 
@@ -103,6 +138,9 @@ const Customers = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Spent
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -117,6 +155,9 @@ const Customers = () => {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                        <div className="text-sm text-gray-500">
+                          Customer since {new Date(customer.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -139,11 +180,19 @@ const Customers = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {customer.total_orders}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 font-medium">
+                      {customer.total_orders}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {customer.total_orders === 1 ? 'order' : 'orders'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     UGX {Number(customer.total_spent).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <CustomerAccountModal customer={customer} sales={sales} />
                   </td>
                 </tr>
               ))}

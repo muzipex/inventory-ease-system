@@ -2,6 +2,7 @@
 import React from 'react';
 import { Package, TrendingUp, ShoppingCart, Users, DollarSign, AlertTriangle, CreditCard } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import LowStockAlert from '@/components/LowStockAlert';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
 import { useCustomers } from '@/hooks/useCustomers';
@@ -28,12 +29,10 @@ const Dashboard = () => {
   const totalOrders = sales.length;
   const lowStockItems = products.filter(product => product.stock <= product.min_stock);
 
-  // Calculate pending payment metrics (credit sales)
   const pendingPaymentSales = sales.filter(sale => sale.status === 'Pending');
   const totalPendingBalance = pendingPaymentSales.reduce((sum, sale) => 
     sum + Number(sale.debit_balance || sale.total_amount), 0);
 
-  // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
   const todaysSales = sales.filter(sale => sale.sale_date === today);
   const todaysPaidSales = todaysSales
@@ -44,7 +43,6 @@ const Dashboard = () => {
   const recentSales = sales.slice(0, 4);
   const lowStockAlerts = lowStockItems.slice(0, 4);
 
-  // Get customers with pending payments
   const customersWithDebt = customers.filter(customer => {
     const customerPendingSales = sales.filter(sale => 
       sale.customer_name === customer.name && 
@@ -98,6 +96,9 @@ const Dashboard = () => {
           Welcome back! Here's what's happening with your inventory.
         </div>
       </div>
+
+      {/* Low Stock Alert */}
+      <LowStockAlert products={products} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

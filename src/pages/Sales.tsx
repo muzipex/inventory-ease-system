@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Calendar, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,16 +6,20 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SalesModal from '@/components/SalesModal';
 import ReceiptModal from '@/components/ReceiptModal';
+import PaymentModal from '@/components/PaymentModal';
 import { useToast } from '@/hooks/use-toast';
 import { useSales } from '@/hooks/useSales';
 import { useProducts } from '@/hooks/useProducts';
+import { usePayments } from '@/hooks/usePayments';
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
   const { sales, loading: salesLoading, error: salesError, addSale } = useSales();
   const { products, loading: productsLoading } = useProducts();
+  const { recordPayment } = usePayments();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,6 +65,14 @@ const Sales = () => {
         description: err instanceof Error ? err.message : "Failed to process sale",
         variant: "destructive"
       });
+    }
+  };
+
+  const handlePaymentComplete = async (saleId: string, paymentAmount: number, paymentMethod: string) => {
+    try {
+      await recordPayment(saleId, paymentAmount, paymentMethod);
+    } catch (err) {
+      console.error('Payment recording failed:', err);
     }
   };
 
@@ -113,7 +124,12 @@ const Sales = () => {
     });
   };
 
-  const filteredSales = filterSalesByDate(sales).filter(sale =>
+  const filterSalesByStatus = (sales: any[]) => {
+    if (statusFilter === 'all') return sales;
+    return sales.filter(sale => sale.status === statusFilter);
+  };
+
+  const filteredSales = filterSalesByStatus(filterSalesByDate(sales)).filter(sale =>
     sale.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     sale.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -121,7 +137,6 @@ const Sales = () => {
   const today = new Date().toISOString().split('T')[0];
   const todaysSales = sales.filter(sale => sale.sale_date === today);
   
-  // Separate paid and credit sales for today
   const todaysPaidSales = todaysSales
     .filter(sale => sale.status === 'Completed')
     .reduce((total, sale) => total + Number(sale.cash_paid || sale.total_amount), 0);
@@ -133,7 +148,6 @@ const Sales = () => {
   const todaysOrders = todaysSales.length;
   const monthSales = sales.reduce((total, sale) => total + Number(sale.total_amount), 0);
 
-  // Map products to match the interface expected by SalesModal
   const mappedProducts = products.map(product => ({
     id: product.id,
     name: product.name,
@@ -210,6 +224,17 @@ const Sales = () => {
             />
           </div>
           <div className="flex space-x-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32 border-0 bg-white dark:bg-gray-800 shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Partial Payment">Partial</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-40 border-0 bg-white dark:bg-gray-800 shadow-sm">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -266,7 +291,7 @@ const Sales = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Receipt
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -300,7 +325,15 @@ const Sales = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <ReceiptModal sale={sale} />
+                    <div className="flex space-x-2">
+                      <ReceiptModal sale={sale} />
+                      {(sale.status === 'Pending' || sale.status === 'Partial Payment') && (
+                        <PaymentModal 
+                          sale={sale} 
+                          onPaymentComplete={handlePaymentComplete}
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
