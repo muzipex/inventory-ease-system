@@ -43,6 +43,22 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Theme variables */
+    --theme-primary: rgb(59, 130, 246);
+    --theme-secondary: rgb(147, 197, 253);
+    --theme-accent: rgb(168, 85, 247);
+    --theme-background: rgb(248, 250, 252);
+    --theme-surface: rgb(255, 255, 255);
+    --theme-text: rgb(15, 23, 42);
+    --theme-text-secondary: rgb(71, 85, 105);
+    --theme-border: rgb(226, 232, 240);
+    --theme-success: rgb(34, 197, 94);
+    --theme-warning: rgb(251, 191, 36);
+    --theme-error: rgb(239, 68, 68);
+    --theme-gradient-header: linear-gradient(135deg, rgb(59, 130, 246), rgb(168, 85, 247));
+    --theme-gradient-button: linear-gradient(135deg, rgb(59, 130, 246), rgb(147, 197, 253));
+    --theme-gradient-card: linear-gradient(135deg, rgb(248, 250, 252), rgb(241, 245, 249));
   }
 
   .dark {
@@ -91,5 +107,32 @@
 
   body {
     @apply bg-background text-foreground transition-colors duration-300;
+    background: var(--theme-background);
+    color: var(--theme-text);
   }
+}
+
+/* Theme-aware components */
+.theme-card {
+  background: var(--theme-surface);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+.theme-button {
+  background: var(--theme-gradient-button);
+  color: white;
+}
+
+.theme-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.theme-text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.theme-border {
+  border-color: var(--theme-border);
 }

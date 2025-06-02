@@ -39,12 +39,37 @@ const ProductModal = ({ product, onSave, trigger }: ProductModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Calculate status based on stock levels
+    let calculatedStatus = 'In Stock';
+    if (formData.stock === 0) {
+      calculatedStatus = 'Out of Stock';
+    } else if (formData.stock <= formData.minStock) {
+      calculatedStatus = 'Low Stock';
+    }
+    
+    // Prepare the product data with calculated status
+    const productToSave = {
+      ...formData,
+      status: calculatedStatus,
+      // Ensure numeric values are properly converted
+      price: Number(formData.price),
+      stock: Number(formData.stock),
+      minStock: Number(formData.minStock)
+    };
+    
+    console.log('Submitting product:', productToSave);
+    onSave(productToSave);
     setOpen(false);
   };
 
   const handleInputChange = (field: keyof Product, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [field]: field === 'price' || field === 'stock' || field === 'minStock' 
+        ? Number(value) || 0 
+        : value 
+    }));
   };
 
   return (
@@ -95,8 +120,9 @@ const ProductModal = ({ product, onSave, trigger }: ProductModalProps) => {
               id="price"
               type="number"
               step="0.01"
+              min="0"
               value={formData.price}
-              onChange={(e) => handleInputChange('price', parseFloat(e.target.value))}
+              onChange={(e) => handleInputChange('price', e.target.value)}
               required
             />
           </div>
@@ -105,8 +131,10 @@ const ProductModal = ({ product, onSave, trigger }: ProductModalProps) => {
             <Input
               id="stock"
               type="number"
+              min="0"
+              max="999999"
               value={formData.stock}
-              onChange={(e) => handleInputChange('stock', parseInt(e.target.value))}
+              onChange={(e) => handleInputChange('stock', e.target.value)}
               required
             />
           </div>
@@ -115,8 +143,10 @@ const ProductModal = ({ product, onSave, trigger }: ProductModalProps) => {
             <Input
               id="minStock"
               type="number"
+              min="0"
+              max="999999"
               value={formData.minStock}
-              onChange={(e) => handleInputChange('minStock', parseInt(e.target.value))}
+              onChange={(e) => handleInputChange('minStock', e.target.value)}
               required
             />
           </div>

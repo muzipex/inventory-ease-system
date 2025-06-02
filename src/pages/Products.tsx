@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Filter, Edit, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,42 +27,50 @@ const Products = () => {
 
   const handleSaveProduct = async (productData: any) => {
     try {
+      console.log('Processing product save:', productData);
+      
+      // Validate the data before sending
+      if (!productData.name || !productData.sku || !productData.category) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      if (productData.price < 0 || productData.stock < 0 || productData.minStock < 0) {
+        throw new Error('Price, stock, and minimum stock must be positive numbers');
+      }
+
+      // Prepare the data for database insertion/update
+      const dbProductData = {
+        name: productData.name.trim(),
+        sku: productData.sku.trim(),
+        category: productData.category.trim(),
+        price: Number(productData.price),
+        stock: Number(productData.stock),
+        min_stock: Number(productData.minStock),
+        status: productData.status
+      };
+
+      console.log('Sending to database:', dbProductData);
+
       if (productData.id) {
         // Update existing product
-        await updateProduct(productData.id, {
-          name: productData.name,
-          sku: productData.sku,
-          category: productData.category,
-          price: productData.price,
-          stock: productData.stock,
-          min_stock: productData.minStock
-        });
+        await updateProduct(productData.id, dbProductData);
         toast({
           title: "Product Updated",
           description: `${productData.name} has been updated successfully`,
         });
       } else {
         // Add new product
-        await addProduct({
-          name: productData.name,
-          sku: productData.sku,
-          category: productData.category,
-          price: productData.price,
-          stock: productData.stock,
-          min_stock: productData.minStock,
-          status: productData.stock > productData.minStock ? 'In Stock' : 
-                  productData.stock > 0 ? 'Low Stock' : 'Out of Stock'
-        });
+        await addProduct(dbProductData);
         toast({
           title: "Product Added",
-          description: `${productData.name} has been added successfully`,
+          description: `${productData.name} has been added successfully with ${productData.stock} units in stock`,
         });
       }
     } catch (err) {
       console.error('Error saving product:', err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to save product",
+        description: err instanceof Error ? err.message : "Failed to save product. Please try again.",
         variant: "destructive"
       });
     }
@@ -188,7 +195,7 @@ const Products = () => {
                     UGX {Number(product.price).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {product.stock}
+                    {product.stock.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(product.status)}`}>
