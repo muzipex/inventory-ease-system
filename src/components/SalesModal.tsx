@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,8 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
   const [open, setOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashPaid, setCashPaid] = useState('');
   const { toast } = useToast();
@@ -87,6 +88,8 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
   const resetForm = () => {
     setCart([]);
     setCustomerName('');
+    setCustomerEmail('');
+    setCustomerPhone('');
     setPaymentMethod('cash');
     setCashPaid('');
   };
@@ -103,8 +106,26 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
 
     if (!customerName.trim()) {
       toast({
-        title: "Customer Required",
+        title: "Customer Name Required",
         description: "Please enter a customer name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!customerEmail.trim()) {
+      toast({
+        title: "Customer Email Required",
+        description: "Please enter a customer email",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!customerPhone.trim()) {
+      toast({
+        title: "Customer Phone Required",
+        description: "Please enter a customer phone number",
         variant: "destructive"
       });
       return;
@@ -136,12 +157,16 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
       cashAmount = cashPaidAmount;
       debitBalance = total - cashPaidAmount;
       status = 'Partial Payment';
+    } else if (paymentMethod === 'credit') {
+      cashAmount = 0;
+      debitBalance = total;
+      status = 'Pending';
     }
 
-    const orderNumber = `ORD-${Date.now()}`;
     const sale = {
-      order_id: orderNumber,
       customer_name: customerName,
+      customer_email: customerEmail,
+      customer_phone: customerPhone,
       total_amount: total,
       items_count: cart.length,
       status: status,
@@ -159,7 +184,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
     
     toast({
       title: "Sale Completed",
-      description: `Order ${orderNumber} has been processed successfully`,
+      description: `Sale has been processed successfully`,
     });
   };
 
@@ -258,12 +283,36 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
 
             <div className="mt-4 space-y-4">
               <div>
-                <Label htmlFor="customer">Customer Name</Label>
+                <Label htmlFor="customer">Customer Name *</Label>
                 <Input
                   id="customer"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter customer name"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email">Customer Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="Enter customer email"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Customer Phone *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Enter customer phone"
                   required
                 />
               </div>
@@ -300,7 +349,7 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                         Cash Paid: UGX {parseFloat(cashPaid || '0').toLocaleString()}
                       </p>
                       <p className="text-sm text-blue-800">
-                        Debit Balance: UGX {(getTotal() - parseFloat(cashPaid || '0')).toLocaleString()}
+                        Outstanding Balance: UGX {(getTotal() - parseFloat(cashPaid || '0')).toLocaleString()}
                       </p>
                     </div>
                   )}
@@ -308,9 +357,9 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
               )}
 
               {paymentMethod === 'credit' && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Full credit payment - entire amount will be marked as debit balance.
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">
+                    Full credit sale - entire amount will be marked as pending payment.
                   </p>
                 </div>
               )}

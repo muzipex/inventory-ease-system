@@ -72,9 +72,17 @@ export const useSales = () => {
     };
   }, []);
 
+  const generateOrderId = () => {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const timeStr = today.getTime().toString().slice(-3);
+    return `${dateStr}-${timeStr}`;
+  };
+
   const addSale = async (saleData: {
-    order_id: string;
     customer_name: string;
+    customer_email?: string;
+    customer_phone?: string;
     total_amount: number;
     items_count: number;
     status?: string;
@@ -91,17 +99,34 @@ export const useSales = () => {
     try {
       console.log('Adding new sale:', saleData);
       
+      const orderId = generateOrderId();
+      
+      // Determine correct status based on payment method
+      let status = 'Completed';
+      let cashPaid = saleData.total_amount;
+      let debitBalance = 0;
+      
+      if (saleData.payment_method === 'credit') {
+        status = 'Pending';
+        cashPaid = 0;
+        debitBalance = saleData.total_amount;
+      } else if (saleData.payment_method === 'partial') {
+        status = 'Partial Payment';
+        cashPaid = saleData.cash_paid || 0;
+        debitBalance = saleData.total_amount - cashPaid;
+      }
+
       // Prepare sale data for insertion
       const saleToInsert = {
-        order_id: saleData.order_id,
+        order_id: orderId,
         customer_name: saleData.customer_name,
         total_amount: saleData.total_amount,
         items_count: saleData.items_count,
-        status: saleData.status || 'Completed',
+        status: status,
         sale_date: saleData.sale_date || new Date().toISOString().split('T')[0],
         payment_method: saleData.payment_method || 'cash',
-        cash_paid: saleData.cash_paid || null,
-        debit_balance: saleData.debit_balance || null
+        cash_paid: cashPaid,
+        debit_balance: debitBalance
       };
 
       console.log('Inserting sale:', saleToInsert);
@@ -166,18 +191,20 @@ export const useSales = () => {
         }
       }
 
-      // Update customer record
+      // Update customer record with mandatory contact info
       const { data: existingCustomer } = await supabase
         .from('customers')
         .select('*')
         .eq('name', saleData.customer_name)
         .single();
 
-      // For partial payments, only add cash_paid to total_spent
-      const amountToAdd = saleData.cash_paid !== undefined ? saleData.cash_paid : saleData.total_amount;
+      // For credit sales, don't add to total_spent
+      const amountToAdd = status === 'Pending' ? 0 : cashPaid;
 
       const customerData = {
         name: saleData.customer_name,
+        email: saleData.customer_email || '',
+        phone: saleData.customer_phone || '',
         total_orders: (existingCustomer?.total_orders || 0) + 1,
         total_spent: (existingCustomer?.total_spent || 0) + amountToAdd
       };

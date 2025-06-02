@@ -22,78 +22,69 @@ const Dashboard = () => {
   }
 
   const totalProducts = products.length;
-  const totalSales = sales.reduce((sum, sale) => sum + Number(sale.total_amount), 0);
+  const totalPaidSales = sales
+    .filter(sale => sale.status === 'Completed')
+    .reduce((sum, sale) => sum + Number(sale.cash_paid || sale.total_amount), 0);
   const totalOrders = sales.length;
   const lowStockItems = products.filter(product => product.stock <= product.min_stock);
 
-  // Calculate partial payment metrics
-  const partialPaymentSales = sales.filter(sale => 
-    sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial'
-  );
-  const totalDebitBalance = partialPaymentSales.reduce((sum, sale) => {
-    // Use debit_balance if available, otherwise estimate
-    const debitBalance = (sale as any).debit_balance;
-    if (debitBalance) {
-      return sum + Number(debitBalance);
-    }
-    // Estimate debit balance if not stored directly
-    if ((sale as any).payment_method === 'partial') {
-      return sum + (Number(sale.total_amount) * 0.3); // Assuming 30% average debit
-    }
-    return sum;
-  }, 0);
+  // Calculate pending payment metrics (credit sales)
+  const pendingPaymentSales = sales.filter(sale => sale.status === 'Pending');
+  const totalPendingBalance = pendingPaymentSales.reduce((sum, sale) => 
+    sum + Number(sale.debit_balance || sale.total_amount), 0);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
-  const todaysSales = sales
-    .filter(sale => sale.sale_date === today)
-    .reduce((total, sale) => total + Number(sale.total_amount), 0);
-  const todaysOrders = sales.filter(sale => sale.sale_date === today).length;
+  const todaysSales = sales.filter(sale => sale.sale_date === today);
+  const todaysPaidSales = todaysSales
+    .filter(sale => sale.status === 'Completed')
+    .reduce((total, sale) => total + Number(sale.cash_paid || sale.total_amount), 0);
+  const todaysOrders = todaysSales.length;
 
   const recentSales = sales.slice(0, 4);
   const lowStockAlerts = lowStockItems.slice(0, 4);
 
-  // Get customers with partial payments
+  // Get customers with pending payments
   const customersWithDebt = customers.filter(customer => {
-    const customerSales = sales.filter(sale => 
+    const customerPendingSales = sales.filter(sale => 
       sale.customer_name === customer.name && 
-      (sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial')
+      (sale.status === 'Pending' || sale.status === 'Partial Payment')
     );
-    return customerSales.length > 0;
+    return customerPendingSales.length > 0;
   }).slice(0, 4);
 
   const stats = [
     {
       title: 'Total Products',
       value: totalProducts.toString(),
-      change: '+12%',
+      change: `${lowStockItems.length} low stock`,
       icon: Package,
       color: 'text-blue-600',
       bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100'
     },
     {
-      title: 'Total Sales',
-      value: `UGX ${totalSales.toLocaleString()}`,
-      change: '+8%',
+      title: 'Paid Sales',
+      value: `UGX ${totalPaidSales.toLocaleString()}`,
+      change: `UGX ${todaysPaidSales.toLocaleString()} today`,
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-gradient-to-br from-green-50 to-green-100'
     },
     {
-      title: 'Orders',
+      title: 'Total Orders',
       value: totalOrders.toString(),
-      change: '+15%',
+      change: `${todaysOrders} today`,
       icon: ShoppingCart,
       color: 'text-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100'
     },
     {
-      title: 'Partial Payments',
-      value: partialPaymentSales.length.toString(),
-      change: `UGX ${totalDebitBalance.toLocaleString()} debt`,
+      title: 'Pending Payments',
+      value: pendingPaymentSales.length.toString(),
+      change: `UGX ${totalPendingBalance.toLocaleString()} owed`,
       icon: CreditCard,
-      color: 'text-purple-600',
-      bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100'
+      color: 'text-red-600',
+      bgColor: 'bg-gradient-to-br from-red-50 to-red-100'
     }
   ];
 
@@ -117,8 +108,9 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 <p className={`text-sm ${
-                  stat.title === 'Partial Payments' ? 'text-purple-600' :
-                  stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
+                  stat.title === 'Pending Payments' ? 'text-red-600' :
+                  stat.title === 'Total Products' && lowStockItems.length > 0 ? 'text-orange-600' :
+                  'text-green-600'
                 }`}>
                   {stat.change}
                 </p>
@@ -144,9 +136,13 @@ const Dashboard = () => {
                   <p className="font-medium">{sale.order_id}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm text-gray-500">{sale.customer_name}</p>
-                    {(sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial') && (
-                      <span className="px-2 py-1 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 text-xs rounded-full border border-orange-200">
-                        Partial
+                    {(sale.status === 'Partial Payment' || sale.status === 'Pending') && (
+                      <span className={`px-2 py-1 text-xs rounded-full border ${
+                        sale.status === 'Pending' 
+                          ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-200'
+                          : 'bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-800 border-orange-200'
+                      }`}>
+                        {sale.status === 'Pending' ? 'Credit' : 'Partial'}
                       </span>
                     )}
                   </div>
@@ -163,28 +159,31 @@ const Dashboard = () => {
         </Card>
 
         <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
-          <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
             Customers with Outstanding Balance
           </h3>
           <div className="space-y-4">
             {customersWithDebt.length > 0 ? customersWithDebt.map((customer) => {
-              const customerPartialSales = sales.filter(sale => 
+              const customerPendingSales = sales.filter(sale => 
                 sale.customer_name === customer.name && 
-                (sale.status === 'Partial Payment' || (sale as any).payment_method === 'partial')
-              ).length;
+                (sale.status === 'Pending' || sale.status === 'Partial Payment')
+              );
+              
+              const totalOwed = customerPendingSales.reduce((sum, sale) => 
+                sum + Number(sale.debit_balance || sale.total_amount), 0);
               
               return (
-                <div key={customer.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                <div key={customer.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
                   <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full"></div>
                     <div>
                       <p className="font-medium">{customer.name}</p>
-                      <p className="text-sm text-gray-500">{customerPartialSales} partial payment(s)</p>
+                      <p className="text-sm text-gray-500">{customerPendingSales.length} pending payment(s)</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-orange-600">Follow up</p>
-                    <p className="text-sm text-gray-500">Outstanding debt</p>
+                    <p className="font-medium text-red-600">UGX {totalOwed.toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">Outstanding</p>
                   </div>
                 </div>
               );

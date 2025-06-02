@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Calendar, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,11 +23,11 @@ const Sales = () => {
       case 'Completed':
         return 'bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700';
       case 'Pending':
-        return 'bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900/50 dark:to-yellow-800/50 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700';
+        return 'bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700';
       case 'Partial Payment':
         return 'bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-orange-800 dark:text-orange-200 border border-orange-300 dark:border-orange-700';
       case 'Cancelled':
-        return 'bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-700';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-900/50 dark:to-gray-800/50 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-700';
       default:
         return 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800/50 dark:to-gray-700/50 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600';
     }
@@ -35,8 +36,9 @@ const Sales = () => {
   const handleSaleComplete = async (saleData: any) => {
     try {
       await addSale({
-        order_id: saleData.order_id,
         customer_name: saleData.customer_name,
+        customer_email: saleData.customer_email,
+        customer_phone: saleData.customer_phone,
         total_amount: saleData.total_amount,
         items_count: saleData.cart.length,
         status: saleData.status,
@@ -52,7 +54,7 @@ const Sales = () => {
 
       toast({
         title: "Sale Completed",
-        description: `Order ${saleData.order_id} has been processed successfully. You can view and download the receipt from the sales table.`,
+        description: `Sale has been processed successfully. You can view and download the receipt from the sales table.`,
       });
     } catch (err) {
       toast({
@@ -65,9 +67,9 @@ const Sales = () => {
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Order ID,Customer,Date,Items,Total,Status,Payment Method\n"
+      + "Order ID,Customer,Date,Items,Total,Status,Payment Method,Cash Paid,Outstanding Balance\n"
       + filteredSales.map(sale => 
-          `${sale.order_id},${sale.customer_name},${sale.sale_date},${sale.items_count},${sale.total_amount},${sale.status},${(sale as any).payment_method || 'N/A'}`
+          `${sale.order_id},${sale.customer_name},${sale.sale_date},${sale.items_count},${sale.total_amount},${sale.status},${sale.payment_method || 'N/A'},${sale.cash_paid || 0},${sale.debit_balance || 0}`
         ).join("\n");
 
     const encodedUri = encodeURI(csvContent);
@@ -117,11 +119,18 @@ const Sales = () => {
   );
 
   const today = new Date().toISOString().split('T')[0];
-  const todaysSales = sales
-    .filter(sale => sale.sale_date === today)
-    .reduce((total, sale) => total + Number(sale.total_amount), 0);
+  const todaysSales = sales.filter(sale => sale.sale_date === today);
+  
+  // Separate paid and credit sales for today
+  const todaysPaidSales = todaysSales
+    .filter(sale => sale.status === 'Completed')
+    .reduce((total, sale) => total + Number(sale.cash_paid || sale.total_amount), 0);
+    
+  const todaysCreditSales = todaysSales
+    .filter(sale => sale.status === 'Pending')
+    .reduce((total, sale) => total + Number(sale.debit_balance || sale.total_amount), 0);
 
-  const todaysOrders = sales.filter(sale => sale.sale_date === today).length;
+  const todaysOrders = todaysSales.length;
   const monthSales = sales.reduce((total, sale) => total + Number(sale.total_amount), 0);
 
   // Map products to match the interface expected by SalesModal
@@ -161,12 +170,18 @@ const Sales = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-0 shadow-md hover:shadow-lg transition-all duration-200">
           <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-800 dark:from-green-400 dark:to-green-300 bg-clip-text text-transparent">
-            UGX {todaysSales.toLocaleString()}
+            UGX {todaysPaidSales.toLocaleString()}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Today's Sales</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Today's Paid Sales</div>
+        </Card>
+        <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-0 shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-800 dark:from-red-400 dark:to-red-300 bg-clip-text text-transparent">
+            UGX {todaysCreditSales.toLocaleString()}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Today's Credit Sales</div>
         </Card>
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-0 shadow-md hover:shadow-lg transition-all duration-200">
           <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent">
@@ -242,7 +257,10 @@ const Sales = () => {
                   Total
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Payment
+                  Cash Paid
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Outstanding
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
@@ -271,7 +289,10 @@ const Sales = () => {
                     UGX {Number(sale.total_amount).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {(sale as any).payment_method || 'Cash'}
+                    UGX {Number(sale.cash_paid || 0).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    UGX {Number(sale.debit_balance || 0).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(sale.status)}`}>
