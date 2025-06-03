@@ -44,21 +44,23 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Theme variables */
-    --theme-primary: rgb(59, 130, 246);
-    --theme-secondary: rgb(147, 197, 253);
-    --theme-accent: rgb(168, 85, 247);
+    /* Techno Futuristic Theme Variables */
+    --theme-primary: rgb(0, 120, 255);
+    --theme-secondary: rgb(120, 180, 255);
+    --theme-accent: rgb(80, 200, 120);
     --theme-background: rgb(248, 250, 252);
     --theme-surface: rgb(255, 255, 255);
-    --theme-text: rgb(15, 23, 42);
-    --theme-text-secondary: rgb(71, 85, 105);
-    --theme-border: rgb(226, 232, 240);
-    --theme-success: rgb(34, 197, 94);
-    --theme-warning: rgb(251, 191, 36);
+    --theme-text: rgb(30, 30, 30);
+    --theme-text-secondary: rgb(100, 116, 139);
+    --theme-border: rgb(220, 228, 240);
+    --theme-success: rgb(16, 185, 129);
+    --theme-warning: rgb(245, 158, 11);
     --theme-error: rgb(239, 68, 68);
-    --theme-gradient-header: linear-gradient(135deg, rgb(59, 130, 246), rgb(168, 85, 247));
-    --theme-gradient-button: linear-gradient(135deg, rgb(59, 130, 246), rgb(147, 197, 253));
-    --theme-gradient-card: linear-gradient(135deg, rgb(248, 250, 252), rgb(241, 245, 249));
+    --theme-gradient-header: linear-gradient(135deg, rgb(0, 120, 255) 0%, rgb(80, 200, 120) 100%);
+    --theme-gradient-button: linear-gradient(135deg, rgb(0, 120, 255) 0%, rgb(120, 180, 255) 100%);
+    --theme-gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+    --theme-shadow: 0 10px 40px rgba(0, 120, 255, 0.1);
+    --theme-glow: 0 0 20px rgba(0, 120, 255, 0.2);
   }
 
   .dark {
@@ -97,6 +99,24 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Dark Mode Futuristic Variables */
+    --theme-primary: rgb(50, 150, 255);
+    --theme-secondary: rgb(100, 200, 255);
+    --theme-accent: rgb(100, 220, 140);
+    --theme-background: rgb(10, 10, 15);
+    --theme-surface: rgb(20, 25, 35);
+    --theme-text: rgb(240, 248, 255);
+    --theme-text-secondary: rgb(160, 176, 200);
+    --theme-border: rgb(45, 55, 70);
+    --theme-success: rgb(16, 185, 129);
+    --theme-warning: rgb(245, 158, 11);
+    --theme-error: rgb(239, 68, 68);
+    --theme-gradient-header: linear-gradient(135deg, rgb(20, 25, 35) 0%, rgb(30, 40, 55) 100%);
+    --theme-gradient-button: linear-gradient(135deg, rgb(50, 150, 255) 0%, rgb(100, 200, 255) 100%);
+    --theme-gradient-card: linear-gradient(145deg, rgba(20, 25, 35, 0.9) 0%, rgba(30, 40, 55, 0.8) 100%);
+    --theme-shadow: 0 10px 40px rgba(50, 150, 255, 0.15);
+    --theme-glow: 0 0 20px rgba(50, 150, 255, 0.3);
   }
 }
 
@@ -106,33 +126,156 @@
   }
 
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply bg-background text-foreground transition-all duration-300;
     background: var(--theme-background);
     color: var(--theme-text);
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
   }
 }
 
-/* Theme-aware components */
+/* Techno Futuristic Components */
 .theme-card {
-  background: var(--theme-surface);
-  border-color: var(--theme-border);
+  background: var(--theme-gradient-card);
+  border: 1px solid var(--theme-border);
   color: var(--theme-text);
+  box-shadow: var(--theme-shadow);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-card:hover {
+  box-shadow: var(--theme-glow), var(--theme-shadow);
+  transform: translateY(-2px);
+  border-color: var(--theme-primary);
 }
 
 .theme-button {
   background: var(--theme-gradient-button);
   color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.3);
 }
 
 .theme-button:hover {
-  opacity: 0.9;
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 120, 255, 0.4);
+  filter: brightness(1.1);
+}
+
+.theme-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 120, 255, 0.3);
 }
 
 .theme-text-secondary {
   color: var(--theme-text-secondary);
+  font-weight: 500;
 }
 
 .theme-border {
   border-color: var(--theme-border);
+}
+
+/* Futuristic Input Styles */
+.theme-input {
+  background: var(--theme-surface);
+  border: 2px solid var(--theme-border);
+  color: var(--theme-text);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px rgba(0, 120, 255, 0.1);
+  background: var(--theme-background);
+}
+
+/* Header Enhancements */
+.theme-header {
+  background: var(--theme-gradient-header);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--theme-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Pills */
+.theme-nav-pill {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-nav-pill:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.theme-nav-pill.active {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Glass Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Glow Animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 120, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 120, 255, 0.4);
+  }
+}
+
+.glow-animation {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Microsoft-style Subtle Grid Pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0, 120, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 120, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Status Indicators */
+.status-success {
+  color: var(--theme-success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-warning {
+  color: var(--theme-warning);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-error {
+  color: var(--theme-error);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }

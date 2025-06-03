@@ -229,6 +229,33 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          page_path: string
+          referrer: string | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          page_path: string
+          referrer?: string | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          page_path?: string
+          referrer?: string | null
+          session_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -543,6 +570,48 @@ export type Database = {
           updated_at?: string
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      visitor_sessions: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean
+          page_path: string
+          referrer: string | null
+          session_id: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          page_path: string
+          referrer?: string | null
+          session_id: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean
+          page_path?: string
+          referrer?: string | null
+          session_id?: string
+          updated_at?: string
+          user_agent?: string | null
         }
         Relationships: []
       }

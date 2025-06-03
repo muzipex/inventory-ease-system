@@ -21,133 +21,161 @@ export interface Theme {
     button: string;
     card: string;
   };
+  effects: {
+    shadow: string;
+    glow: string;
+  };
 }
 
 const themes: Record<string, Theme> = {
-  default: {
-    name: 'Default Blue',
+  azure: {
+    name: 'Azure Professional',
     colors: {
-      primary: 'rgb(59, 130, 246)',
-      secondary: 'rgb(147, 197, 253)',
-      accent: 'rgb(168, 85, 247)',
+      primary: 'rgb(0, 120, 255)',
+      secondary: 'rgb(120, 180, 255)',
+      accent: 'rgb(80, 200, 120)',
       background: 'rgb(248, 250, 252)',
       surface: 'rgb(255, 255, 255)',
-      text: 'rgb(15, 23, 42)',
-      textSecondary: 'rgb(71, 85, 105)',
-      border: 'rgb(226, 232, 240)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
+      text: 'rgb(30, 30, 30)',
+      textSecondary: 'rgb(100, 116, 139)',
+      border: 'rgb(220, 228, 240)',
+      success: 'rgb(16, 185, 129)',
+      warning: 'rgb(245, 158, 11)',
       error: 'rgb(239, 68, 68)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(59, 130, 246), rgb(168, 85, 247))',
-      button: 'linear-gradient(135deg, rgb(59, 130, 246), rgb(147, 197, 253))',
-      card: 'linear-gradient(135deg, rgb(248, 250, 252), rgb(241, 245, 249))',
+      header: 'linear-gradient(135deg, rgb(0, 120, 255) 0%, rgb(80, 200, 120) 100%)',
+      button: 'linear-gradient(135deg, rgb(0, 120, 255) 0%, rgb(120, 180, 255) 100%)',
+      card: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%)',
+    },
+    effects: {
+      shadow: '0 10px 40px rgba(0, 120, 255, 0.1)',
+      glow: '0 0 20px rgba(0, 120, 255, 0.2)',
     },
   },
-  emerald: {
-    name: 'Emerald Green',
+  carbon: {
+    name: 'Carbon Black',
     colors: {
-      primary: 'rgb(16, 185, 129)',
-      secondary: 'rgb(110, 231, 183)',
-      accent: 'rgb(6, 182, 212)',
-      background: 'rgb(240, 253, 244)',
-      surface: 'rgb(255, 255, 255)',
-      text: 'rgb(20, 83, 45)',
-      textSecondary: 'rgb(75, 85, 99)',
-      border: 'rgb(209, 250, 229)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
-      error: 'rgb(239, 68, 68)',
+      primary: 'rgb(120, 220, 255)',
+      secondary: 'rgb(180, 240, 255)',
+      accent: 'rgb(255, 180, 120)',
+      background: 'rgb(18, 18, 18)',
+      surface: 'rgb(30, 30, 30)',
+      text: 'rgb(245, 245, 245)',
+      textSecondary: 'rgb(160, 160, 160)',
+      border: 'rgb(60, 60, 60)',
+      success: 'rgb(80, 220, 140)',
+      warning: 'rgb(255, 200, 60)',
+      error: 'rgb(255, 120, 120)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(16, 185, 129), rgb(6, 182, 212))',
-      button: 'linear-gradient(135deg, rgb(16, 185, 129), rgb(110, 231, 183))',
-      card: 'linear-gradient(135deg, rgb(240, 253, 244), rgb(236, 253, 245))',
+      header: 'linear-gradient(135deg, rgb(30, 30, 30) 0%, rgb(50, 50, 50) 100%)',
+      button: 'linear-gradient(135deg, rgb(120, 220, 255) 0%, rgb(180, 240, 255) 100%)',
+      card: 'linear-gradient(145deg, rgba(30, 30, 30, 0.9) 0%, rgba(40, 40, 40, 0.8) 100%)',
+    },
+    effects: {
+      shadow: '0 10px 40px rgba(120, 220, 255, 0.15)',
+      glow: '0 0 20px rgba(120, 220, 255, 0.3)',
     },
   },
-  sunset: {
-    name: 'Sunset Orange',
+  matrix: {
+    name: 'Matrix Green',
     colors: {
-      primary: 'rgb(251, 146, 60)',
-      secondary: 'rgb(254, 215, 170)',
-      accent: 'rgb(244, 63, 94)',
-      background: 'rgb(255, 251, 235)',
-      surface: 'rgb(255, 255, 255)',
-      text: 'rgb(124, 45, 18)',
-      textSecondary: 'rgb(120, 113, 108)',
-      border: 'rgb(254, 240, 138)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
-      error: 'rgb(239, 68, 68)',
+      primary: 'rgb(0, 255, 65)',
+      secondary: 'rgb(120, 255, 160)',
+      accent: 'rgb(0, 200, 255)',
+      background: 'rgb(8, 16, 8)',
+      surface: 'rgb(16, 32, 16)',
+      text: 'rgb(0, 255, 65)',
+      textSecondary: 'rgb(120, 200, 120)',
+      border: 'rgb(40, 80, 40)',
+      success: 'rgb(0, 255, 65)',
+      warning: 'rgb(255, 255, 0)',
+      error: 'rgb(255, 80, 80)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(251, 146, 60), rgb(244, 63, 94))',
-      button: 'linear-gradient(135deg, rgb(251, 146, 60), rgb(254, 215, 170))',
-      card: 'linear-gradient(135deg, rgb(255, 251, 235), rgb(254, 243, 199))',
+      header: 'linear-gradient(135deg, rgb(8, 16, 8) 0%, rgb(16, 32, 16) 100%)',
+      button: 'linear-gradient(135deg, rgb(0, 255, 65) 0%, rgb(120, 255, 160) 100%)',
+      card: 'linear-gradient(145deg, rgba(16, 32, 16, 0.9) 0%, rgba(24, 48, 24, 0.8) 100%)',
+    },
+    effects: {
+      shadow: '0 10px 40px rgba(0, 255, 65, 0.2)',
+      glow: '0 0 20px rgba(0, 255, 65, 0.4)',
     },
   },
-  purple: {
-    name: 'Royal Purple',
+  cyber: {
+    name: 'Cyber Purple',
     colors: {
-      primary: 'rgb(147, 51, 234)',
-      secondary: 'rgb(196, 181, 253)',
-      accent: 'rgb(236, 72, 153)',
-      background: 'rgb(250, 245, 255)',
-      surface: 'rgb(255, 255, 255)',
-      text: 'rgb(88, 28, 135)',
-      textSecondary: 'rgb(107, 114, 128)',
-      border: 'rgb(233, 213, 255)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
-      error: 'rgb(239, 68, 68)',
+      primary: 'rgb(138, 43, 226)',
+      secondary: 'rgb(186, 104, 255)',
+      accent: 'rgb(255, 20, 147)',
+      background: 'rgb(16, 8, 24)',
+      surface: 'rgb(32, 16, 48)',
+      text: 'rgb(255, 240, 255)',
+      textSecondary: 'rgb(200, 180, 220)',
+      border: 'rgb(80, 40, 120)',
+      success: 'rgb(120, 255, 180)',
+      warning: 'rgb(255, 200, 60)',
+      error: 'rgb(255, 80, 140)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(147, 51, 234), rgb(236, 72, 153))',
-      button: 'linear-gradient(135deg, rgb(147, 51, 234), rgb(196, 181, 253))',
-      card: 'linear-gradient(135deg, rgb(250, 245, 255), rgb(245, 243, 255))',
+      header: 'linear-gradient(135deg, rgb(16, 8, 24) 0%, rgb(32, 16, 48) 100%)',
+      button: 'linear-gradient(135deg, rgb(138, 43, 226) 0%, rgb(186, 104, 255) 100%)',
+      card: 'linear-gradient(145deg, rgba(32, 16, 48, 0.9) 0%, rgba(48, 24, 72, 0.8) 100%)',
+    },
+    effects: {
+      shadow: '0 10px 40px rgba(138, 43, 226, 0.2)',
+      glow: '0 0 20px rgba(138, 43, 226, 0.4)',
     },
   },
-  ocean: {
-    name: 'Ocean Blue',
+  office: {
+    name: 'Office Modern',
     colors: {
-      primary: 'rgb(14, 165, 233)',
-      secondary: 'rgb(125, 211, 252)',
-      accent: 'rgb(34, 211, 238)',
-      background: 'rgb(240, 249, 255)',
+      primary: 'rgb(0, 102, 204)',
+      secondary: 'rgb(100, 160, 255)',
+      accent: 'rgb(16, 137, 62)',
+      background: 'rgb(250, 251, 252)',
       surface: 'rgb(255, 255, 255)',
-      text: 'rgb(12, 74, 110)',
-      textSecondary: 'rgb(71, 85, 105)',
-      border: 'rgb(186, 230, 253)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
-      error: 'rgb(239, 68, 68)',
+      text: 'rgb(32, 32, 32)',
+      textSecondary: 'rgb(96, 96, 96)',
+      border: 'rgb(225, 230, 235)',
+      success: 'rgb(16, 137, 62)',
+      warning: 'rgb(255, 140, 0)',
+      error: 'rgb(213, 43, 30)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(14, 165, 233), rgb(34, 211, 238))',
-      button: 'linear-gradient(135deg, rgb(14, 165, 233), rgb(125, 211, 252))',
-      card: 'linear-gradient(135deg, rgb(240, 249, 255), rgb(224, 242, 254))',
+      header: 'linear-gradient(135deg, rgb(0, 102, 204) 0%, rgb(16, 137, 62) 100%)',
+      button: 'linear-gradient(135deg, rgb(0, 102, 204) 0%, rgb(100, 160, 255) 100%)',
+      card: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 251, 252, 0.9) 100%)',
+    },
+    effects: {
+      shadow: '0 8px 32px rgba(0, 102, 204, 0.12)',
+      glow: '0 0 16px rgba(0, 102, 204, 0.2)',
     },
   },
-  forest: {
-    name: 'Forest Green',
+  teams: {
+    name: 'Teams Professional',
     colors: {
-      primary: 'rgb(34, 197, 94)',
-      secondary: 'rgb(134, 239, 172)',
-      accent: 'rgb(132, 204, 22)',
-      background: 'rgb(247, 254, 231)',
+      primary: 'rgb(98, 100, 167)',
+      secondary: 'rgb(154, 156, 255)',
+      accent: 'rgb(237, 144, 255)',
+      background: 'rgb(248, 248, 250)',
       surface: 'rgb(255, 255, 255)',
-      text: 'rgb(20, 83, 45)',
-      textSecondary: 'rgb(75, 85, 99)',
-      border: 'rgb(220, 252, 231)',
-      success: 'rgb(34, 197, 94)',
-      warning: 'rgb(251, 191, 36)',
-      error: 'rgb(239, 68, 68)',
+      text: 'rgb(36, 36, 36)',
+      textSecondary: 'rgb(100, 100, 100)',
+      border: 'rgb(218, 218, 230)',
+      success: 'rgb(54, 179, 126)',
+      warning: 'rgb(255, 180, 50)',
+      error: 'rgb(196, 49, 75)',
     },
     gradients: {
-      header: 'linear-gradient(135deg, rgb(34, 197, 94), rgb(132, 204, 22))',
-      button: 'linear-gradient(135deg, rgb(34, 197, 94), rgb(134, 239, 172))',
-      card: 'linear-gradient(135deg, rgb(247, 254, 231), rgb(240, 253, 244))',
+      header: 'linear-gradient(135deg, rgb(98, 100, 167) 0%, rgb(237, 144, 255) 100%)',
+      button: 'linear-gradient(135deg, rgb(98, 100, 167) 0%, rgb(154, 156, 255) 100%)',
+      card: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 248, 250, 0.9) 100%)',
+    },
+    effects: {
+      shadow: '0 8px 32px rgba(98, 100, 167, 0.15)',
+      glow: '0 0 16px rgba(98, 100, 167, 0.25)',
     },
   },
 };
@@ -162,7 +190,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeName, setThemeName] = useState<string>('default');
+  const [themeName, setThemeName] = useState<string>('azure');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme');
@@ -192,6 +220,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--theme-gradient-header', theme.gradients.header);
     root.style.setProperty('--theme-gradient-button', theme.gradients.button);
     root.style.setProperty('--theme-gradient-card', theme.gradients.card);
+    root.style.setProperty('--theme-shadow', theme.effects.shadow);
+    root.style.setProperty('--theme-glow', theme.effects.glow);
   }, [themeName]);
 
   const setTheme = (newThemeName: string) => {
