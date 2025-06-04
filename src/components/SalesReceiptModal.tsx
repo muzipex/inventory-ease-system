@@ -177,13 +177,13 @@ NGABIRANO'S BLOCKS AND CONCRETE PRODUCTS
             <tbody>
               <tr>
                 <td className="border border-black p-1">
-                  Mixed Items ({sale.payment_method === 'credit' || isPartialPayment ? 'Credit sale' : 'Cash sale'})
+                  Mixed Items ({sale.payment_method === 'credit' || isPartialPayment ? 'Credit sale' : sale.payment_method === 'bank_transfer' ? 'Bank transfer' : 'Cash sale'})
                 </td>
                 <td className="border border-black p-1">{sale.items_count}</td>
                 <td className="border border-black p-1">UGX {Number(sale.total_amount).toLocaleString()}</td>
               </tr>
               <tr>
-                <td className="border border-black p-2 font-bold" colspan="2">TOTAL:</td>
+                <td className="border border-black p-2 font-bold" colSpan={2}>TOTAL:</td>
                 <td className="border border-black p-2 font-bold">UGX {Number(sale.total_amount).toLocaleString()}</td>
               </tr>
             </tbody>

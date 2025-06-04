@@ -40,8 +40,13 @@ const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInp
 
   const handleInputFocus = () => {
     setIsEditing(true);
-    // Clear the input when focused to allow easy editing
-    setLocalValue('');
+    // Select all text when focused to allow easy editing
+    setTimeout(() => {
+      const input = document.activeElement as HTMLInputElement;
+      if (input) {
+        input.select();
+      }
+    }, 0);
   };
 
   const handleInputBlur = () => {
@@ -59,11 +64,11 @@ const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInp
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent form submission on Enter key
     if (e.key === 'Enter') {
       e.preventDefault();
-      e.currentTarget.blur();
+      (e.target as HTMLInputElement).blur();
     }
   };
 
