@@ -60,6 +60,86 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          description: string | null
+          expense_date: string
+          id: string
+          is_recurring: boolean
+          payment_method: string
+          receipt_url: string | null
+          recurring_end_date: string | null
+          recurring_frequency: string | null
+          supplier_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          is_recurring?: boolean
+          payment_method?: string
+          receipt_url?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          expense_date?: string
+          id?: string
+          is_recurring?: boolean
+          payment_method?: string
+          receipt_url?: string | null
+          recurring_end_date?: string | null
+          recurring_frequency?: string | null
+          supplier_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_applications: {
         Row: {
           applicant_id: string
@@ -315,6 +395,41 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      receipts: {
+        Row: {
+          created_at: string
+          id: string
+          receipt_number: string
+          receipt_url: string | null
+          sale_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receipt_number: string
+          receipt_url?: string | null
+          sale_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receipt_number?: string
+          receipt_url?: string | null
+          sale_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {

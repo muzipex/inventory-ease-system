@@ -14,6 +14,7 @@ import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
+import Expenses from "./pages/Expenses";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -42,6 +43,11 @@ const App = () => (
               <Route path="/sales" element={
                 <ProtectedRoute>
                   <Layout><Sales /></Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/expenses" element={
+                <ProtectedRoute>
+                  <Layout><Expenses /></Layout>
                 </ProtectedRoute>
               } />
               <Route path="/reports" element={
