@@ -25,7 +25,11 @@ export interface Expense {
   recurring_end_date?: string;
   created_at: string;
   updated_at: string;
-  expense_categories?: ExpenseCategory;
+  expense_categories?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }
 
 export const useExpenses = () => {

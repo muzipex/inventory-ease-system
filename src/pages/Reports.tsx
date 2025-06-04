@@ -4,12 +4,12 @@ import { Card } from '@/components/ui/card';
 import { BarChart3, TrendingUp, Download, Calendar, DollarSign, Package, Users, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/calendar';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DateRangePicker from '@/components/DateRangePicker';
 
 const Reports = () => {
   const { products, loading: productsLoading } = useProducts();
@@ -18,6 +18,8 @@ const Reports = () => {
   const { toast } = useToast();
   const [reportType, setReportType] = useState('overview');
   const [dateRange, setDateRange] = useState('this_month');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   if (productsLoading || salesLoading || expensesLoading) {
     return (
@@ -65,7 +67,7 @@ const Reports = () => {
     : '0.0';
   const salesGrowthText = salesGrowth.startsWith('-') ? salesGrowth : `+${salesGrowth}`;
 
-  // Expense analytics
+  // Expense analytics - synchronized with expenses section
   const expensesByCategory = categories.map(category => {
     const categoryExpenses = expenses.filter(expense => expense.category_id === category.id);
     const total = categoryExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -178,6 +180,11 @@ const Reports = () => {
     });
   };
 
+  const handleDateRangeChange = (start: Date | null, end: Date | null) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -193,12 +200,12 @@ const Reports = () => {
               <SelectItem value="last_month">Last Month</SelectItem>
               <SelectItem value="this_quarter">This Quarter</SelectItem>
               <SelectItem value="this_year">This Year</SelectItem>
+              <SelectItem value="custom">Custom Range</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Calendar className="h-4 w-4" />
-            <span>Custom Range</span>
-          </Button>
+          {dateRange === 'custom' && (
+            <DateRangePicker onDateRangeChange={handleDateRangeChange} />
+          )}
         </div>
       </div>
 
@@ -357,7 +364,7 @@ const Reports = () => {
             <h4 className="text-lg font-semibold mb-4">Expenses by Category</h4>
             <div className="space-y-4">
               {expensesByCategory.map((category, index) => (
-                <div key={index} className="flex justify-between items-center">
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{category.name}</p>
                     <p className="text-sm text-gray-500">{category.count} expenses</p>
@@ -365,7 +372,7 @@ const Reports = () => {
                   <div className="text-right">
                     <p className="font-medium">UGX {category.total.toLocaleString()}</p>
                     <p className="text-sm text-gray-500">
-                      {((category.total / totalExpenses) * 100).toFixed(1)}%
+                      {totalExpenses > 0 ? ((category.total / totalExpenses) * 100).toFixed(1) : 0}%
                     </p>
                   </div>
                 </div>
@@ -440,7 +447,7 @@ const Reports = () => {
             <h4 className="text-lg font-semibold mb-4">Top Customers</h4>
             <div className="space-y-4">
               {topCustomers.length > 0 ? topCustomers.map((customer, index) => (
-                <div key={index} className="flex justify-between items-center">
+                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{customer.name}</p>
                     <p className="text-sm text-gray-500">{customer.sales} items purchased</p>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Plus, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import QuantityInput from '@/components/QuantityInput';
 
 interface Product {
   id: string;
@@ -74,11 +76,6 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
           : item
       ));
     }
-  };
-
-  const handleQuantityInput = (productId: string, value: string) => {
-    const newQuantity = parseInt(value) || 0;
-    updateQuantity(productId, newQuantity);
   };
 
   const getTotal = () => {
@@ -243,30 +240,12 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                       <p className="font-medium">{item.name}</p>
                       <p className="text-sm text-gray-500">UGX {item.price.toLocaleString()} each</p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => handleQuantityInput(item.id, e.target.value)}
-                        className="w-16 text-center"
-                        min="1"
-                        max={item.stock}
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
+                    <QuantityInput
+                      value={item.quantity}
+                      onChange={(newQuantity) => updateQuantity(item.id, newQuantity)}
+                      min={1}
+                      max={item.stock}
+                    />
                   </div>
                 </Card>
               ))}

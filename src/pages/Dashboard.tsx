@@ -6,13 +6,17 @@ import LowStockAlert from '@/components/LowStockAlert';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
 import { useCustomers } from '@/hooks/useCustomers';
+import { useExpenses } from '@/hooks/useExpenses';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { products, loading: productsLoading } = useProducts();
   const { sales, loading: salesLoading } = useSales();
   const { customers, loading: customersLoading } = useCustomers();
+  const { expenses, loading: expensesLoading } = useExpenses();
+  const { toast } = useToast();
 
-  if (productsLoading || salesLoading || customersLoading) {
+  if (productsLoading || salesLoading || customersLoading || expensesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-lg bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -29,9 +33,13 @@ const Dashboard = () => {
   const totalOrders = sales.length;
   const lowStockItems = products.filter(product => product.stock <= product.min_stock);
 
-  const pendingPaymentSales = sales.filter(sale => sale.status === 'Pending');
+  const pendingPaymentSales = sales.filter(sale => 
+    sale.status === 'Pending' || sale.status === 'Partial Payment'
+  );
   const totalPendingBalance = pendingPaymentSales.reduce((sum, sale) => 
-    sum + Number(sale.debit_balance || sale.total_amount), 0);
+    sum + Number(sale.debit_balance || (sale.status === 'Pending' ? sale.total_amount : 0)), 0);
+
+  const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
 
   const today = new Date().toISOString().split('T')[0];
   const todaysSales = sales.filter(sale => sale.sale_date === today);
@@ -51,6 +59,32 @@ const Dashboard = () => {
     return customerPendingSales.length > 0;
   }).slice(0, 4);
 
+  const handleCardClick = (type: string) => {
+    let message = '';
+    switch (type) {
+      case 'products':
+        message = `${totalProducts} products in inventory, ${lowStockItems.length} need attention`;
+        break;
+      case 'sales':
+        message = `Total paid sales: UGX ${totalPaidSales.toLocaleString()}`;
+        break;
+      case 'orders':
+        message = `${totalOrders} total orders, ${todaysOrders} today`;
+        break;
+      case 'pending':
+        message = `${pendingPaymentSales.length} pending payments worth UGX ${totalPendingBalance.toLocaleString()}`;
+        break;
+      case 'expenses':
+        message = `Total expenses: UGX ${totalExpenses.toLocaleString()}`;
+        break;
+    }
+    
+    toast({
+      title: "Quick Report",
+      description: message,
+    });
+  };
+
   const stats = [
     {
       title: 'Total Products',
@@ -58,7 +92,8 @@ const Dashboard = () => {
       change: `${lowStockItems.length} low stock`,
       icon: Package,
       color: 'text-blue-600',
-      bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100'
+      bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100',
+      type: 'products'
     },
     {
       title: 'Paid Sales',
@@ -66,7 +101,8 @@ const Dashboard = () => {
       change: `UGX ${todaysPaidSales.toLocaleString()} today`,
       icon: DollarSign,
       color: 'text-green-600',
-      bgColor: 'bg-gradient-to-br from-green-50 to-green-100'
+      bgColor: 'bg-gradient-to-br from-green-50 to-green-100',
+      type: 'sales'
     },
     {
       title: 'Total Orders',
@@ -74,7 +110,8 @@ const Dashboard = () => {
       change: `${todaysOrders} today`,
       icon: ShoppingCart,
       color: 'text-orange-600',
-      bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100'
+      bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100',
+      type: 'orders'
     },
     {
       title: 'Pending Payments',
@@ -82,7 +119,17 @@ const Dashboard = () => {
       change: `UGX ${totalPendingBalance.toLocaleString()} owed`,
       icon: CreditCard,
       color: 'text-red-600',
-      bgColor: 'bg-gradient-to-br from-red-50 to-red-100'
+      bgColor: 'bg-gradient-to-br from-red-50 to-red-100',
+      type: 'pending'
+    },
+    {
+      title: 'Total Expenses',
+      value: `UGX ${totalExpenses.toLocaleString()}`,
+      change: 'all time',
+      icon: TrendingUp,
+      color: 'text-purple-600',
+      bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100',
+      type: 'expenses'
     }
   ];
 
@@ -93,7 +140,7 @@ const Dashboard = () => {
           Dashboard
         </h1>
         <div className="text-sm text-gray-500">
-          Welcome back! Here's what's happening with your inventory.
+          Welcome back! Here's what's happening with your business.
         </div>
       </div>
 
@@ -101,9 +148,13 @@ const Dashboard = () => {
       <LowStockAlert products={products} />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+          <Card 
+            key={index} 
+            className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md cursor-pointer hover:scale-105"
+            onClick={() => handleCardClick(stat.type)}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
@@ -126,7 +177,10 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+        <Card 
+          className="p-6 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+          onClick={() => handleCardClick('sales')}
+        >
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Recent Sales
           </h3>
@@ -159,7 +213,10 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+        <Card 
+          className="p-6 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+          onClick={() => handleCardClick('pending')}
+        >
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
             Customers with Outstanding Balance
           </h3>
@@ -171,7 +228,7 @@ const Dashboard = () => {
               );
               
               const totalOwed = customerPendingSales.reduce((sum, sale) => 
-                sum + Number(sale.debit_balance || sale.total_amount), 0);
+                sum + Number(sale.debit_balance || (sale.status === 'Pending' ? sale.total_amount : 0)), 0);
               
               return (
                 <div key={customer.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-200">
@@ -196,7 +253,10 @@ const Dashboard = () => {
       </div>
 
       {/* Low Stock Alert */}
-      <Card className="p-6 shadow-md hover:shadow-lg transition-all duration-200">
+      <Card 
+        className="p-6 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+        onClick={() => handleCardClick('products')}
+      >
         <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
           Low Stock Alerts
         </h3>
