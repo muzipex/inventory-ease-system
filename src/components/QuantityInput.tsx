@@ -14,14 +14,18 @@ interface QuantityInputProps {
 
 const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInputProps) => {
   const [localValue, setLocalValue] = useState(value.toString());
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    setLocalValue(value.toString());
-  }, [value]);
+    if (!isEditing) {
+      setLocalValue(value.toString());
+    }
+  }, [value, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     setLocalValue(inputValue);
+    setIsEditing(true);
     
     // Allow empty string for better UX while typing
     if (inputValue === '') {
@@ -34,11 +38,24 @@ const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInp
     }
   };
 
+  const handleInputFocus = () => {
+    setIsEditing(true);
+    // Clear the input when focused to allow easy editing
+    setLocalValue('');
+  };
+
   const handleInputBlur = () => {
-    // If input is empty or invalid, reset to minimum value
+    setIsEditing(false);
+    // If input is empty or invalid, reset to current value or minimum
     if (localValue === '' || isNaN(parseInt(localValue)) || parseInt(localValue) < min) {
-      setLocalValue(min.toString());
-      onChange(min);
+      const resetValue = value >= min ? value : min;
+      setLocalValue(resetValue.toString());
+      onChange(resetValue);
+    } else {
+      const numValue = parseInt(localValue);
+      if (numValue !== value) {
+        onChange(numValue);
+      }
     }
   };
 
@@ -46,7 +63,7 @@ const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInp
     // Prevent form submission on Enter key
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleInputBlur();
+      e.currentTarget.blur();
     }
   };
 
@@ -80,6 +97,7 @@ const QuantityInput = ({ value, onChange, min = 1, max, className }: QuantityInp
         type="number"
         value={localValue}
         onChange={handleInputChange}
+        onFocus={handleInputFocus}
         onBlur={handleInputBlur}
         onKeyPress={handleKeyPress}
         className="w-16 text-center h-8"

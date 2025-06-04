@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Package, ExternalLink } from 'lucide-react';
@@ -11,7 +11,12 @@ interface LowStockAlertProps {
 
 const LowStockAlert = ({ products }: LowStockAlertProps) => {
   const navigate = useNavigate();
-  const lowStockItems = products.filter(product => product.stock <= product.min_stock);
+  const [lowStockItems, setLowStockItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    const items = products.filter(product => product.stock <= product.min_stock);
+    setLowStockItems(items);
+  }, [products]);
 
   if (lowStockItems.length === 0) {
     return null;

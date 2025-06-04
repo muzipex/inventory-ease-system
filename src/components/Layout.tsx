@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Home, ShoppingCart, BarChart3, Users, Settings, Menu, Sun, Moon } from 'lucide-react';
+import { Package, Home, ShoppingCart, BarChart3, Users, Settings, Menu, Sun, Moon, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeSelector from './ThemeSelector';
 
@@ -33,6 +33,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Sales', href: '/sales', icon: ShoppingCart },
+    { name: 'Expenses', href: '/expenses', icon: Receipt },
     { name: 'Reports', href: '/reports', icon: BarChart3 },
     { name: 'Customers', href: '/customers', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings }

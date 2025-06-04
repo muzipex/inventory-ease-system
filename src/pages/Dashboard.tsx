@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Package, TrendingUp, ShoppingCart, Users, DollarSign, AlertTriangle, CreditCard } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import LowStockAlert from '@/components/LowStockAlert';
+import AgingInventory from '@/components/AgingInventory';
+import SalesReceiptModal from '@/components/SalesReceiptModal';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
 import { useCustomers } from '@/hooks/useCustomers';
@@ -15,6 +17,8 @@ const Dashboard = () => {
   const { customers, loading: customersLoading } = useCustomers();
   const { expenses, loading: expensesLoading } = useExpenses();
   const { toast } = useToast();
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
 
   if (productsLoading || salesLoading || customersLoading || expensesLoading) {
     return (
@@ -85,6 +89,11 @@ const Dashboard = () => {
     });
   };
 
+  const handleSaleClick = (sale: any) => {
+    setSelectedSale(sale);
+    setReceiptModalOpen(true);
+  };
+
   const stats = [
     {
       title: 'Total Products',
@@ -144,8 +153,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Low Stock Alert */}
-      <LowStockAlert products={products} />
+      {/* Alerts Section */}
+      <div className="space-y-4">
+        <LowStockAlert products={products} />
+        <AgingInventory />
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
@@ -178,15 +190,18 @@ const Dashboard = () => {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card 
-          className="p-6 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
-          onClick={() => handleCardClick('sales')}
+          className="p-6 shadow-md hover:shadow-lg transition-all duration-200"
         >
           <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Recent Sales
+            Recent Sales (Click for Receipt)
           </h3>
           <div className="space-y-4">
             {recentSales.length > 0 ? recentSales.map((sale) => (
-              <div key={sale.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+              <div 
+                key={sale.id} 
+                className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg cursor-pointer hover:from-blue-50 hover:to-blue-100 transition-all duration-200"
+                onClick={() => handleSaleClick(sale)}
+              >
                 <div>
                   <p className="font-medium">{sale.order_id}</p>
                   <div className="flex items-center space-x-2">
@@ -280,6 +295,15 @@ const Dashboard = () => {
           )}
         </div>
       </Card>
+
+      {/* Sales Receipt Modal */}
+      {selectedSale && (
+        <SalesReceiptModal
+          sale={selectedSale}
+          open={receiptModalOpen}
+          onOpenChange={setReceiptModalOpen}
+        />
+      )}
     </div>
   );
 };
