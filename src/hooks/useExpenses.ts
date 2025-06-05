@@ -164,6 +164,44 @@ export const useExpenses = () => {
     }
   };
 
+  const deleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('expense_categories')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        // Check if it's a foreign key constraint error
+        if (error.message.includes('violates foreign key constraint') || error.code === '23503') {
+          toast({
+            title: "Cannot Delete Category",
+            description: "This category cannot be deleted because it has associated expenses. Please delete or reassign those expenses first.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+
+      await fetchCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -181,6 +219,7 @@ export const useExpenses = () => {
     addExpense,
     updateExpense,
     deleteExpense,
+    deleteCategory,
     refetch: () => Promise.all([fetchExpenses(), fetchCategories()]),
   };
 };

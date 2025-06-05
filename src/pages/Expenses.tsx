@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { format, isWithinInterval } from 'date-fns';
 
 const Expenses = () => {
-  const { expenses, categories, loading, deleteExpense } = useExpenses();
+  const { expenses, categories, loading, deleteExpense, deleteCategory } = useExpenses();
   const { toast } = useToast();
   const { exportToCSV, exportToPDF, exportToWord } = useExpenseExport();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,6 +62,12 @@ const Expenses = () => {
     }
   };
 
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    if (window.confirm(`Are you sure you want to delete the category "${categoryName}"? This action cannot be undone.`)) {
+      await deleteCategory(categoryId);
+    }
+  };
+
   const openModal = () => {
     setSelectedExpense(null);
     setIsModalOpen(true);
@@ -94,6 +100,25 @@ const Expenses = () => {
       description: `Showing expenses for selected category`,
     });
   };
+
+  // Filter expenses based on search, filters, and date range
+  const filteredExpenses = expenses.filter(expense => {
+    const matchesSearch = 
+      expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.expense_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = !categoryFilter || categoryFilter === 'all_categories' || expense.category_id === categoryFilter;
+    const matchesPaymentMethod = !paymentMethodFilter || paymentMethodFilter === 'all_payment_methods' || expense.payment_method === paymentMethodFilter;
+    
+    const matchesDateRange = !startDate || !endDate || isWithinInterval(
+      new Date(expense.expense_date),
+      { start: startDate, end: endDate }
+    );
+    
+    return matchesSearch && matchesCategory && matchesPaymentMethod && matchesDateRange;
+  });
 
   if (loading) {
     return (
@@ -320,23 +345,35 @@ const Expenses = () => {
                 return (
                   <Card 
                     key={category.id} 
-                    className={`p-4 cursor-pointer transition-all hover:shadow-md hover:border-blue-300 ${
+                    className={`p-4 transition-all hover:shadow-md hover:border-blue-300 ${
                       selectedCategoryId === category.id ? 'border-blue-500 bg-blue-50' : ''
                     }`}
-                    onClick={() => handleCategoryClick(category.id)}
                   >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => handleCategoryClick(category.id)}
+                      >
                         <h4 className="font-medium text-blue-600 hover:text-blue-700">{category.name}</h4>
                         <p className="text-sm text-gray-500 mt-1">{category.description}</p>
                       </div>
-                      <div className="text-right ml-4">
-                        <p className="font-medium">UGX {total.toLocaleString()}</p>
-                        <p className="text-sm text-gray-500">{categoryExpenses.length} expenses</p>
+                      <div className="flex items-center space-x-2 ml-4">
+                        <div className="text-right">
+                          <p className="font-medium">UGX {total.toLocaleString()}</p>
+                          <p className="text-sm text-gray-500">{categoryExpenses.length} expenses</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteCategory(category.id, category.name)}
+                          className="text-red-600 hover:text-red-700 hover:border-red-300"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                     <div className="mt-3 text-xs text-gray-400">
-                      Click to filter expenses by this category
+                      Click category name to filter expenses
                     </div>
                   </Card>
                 );
