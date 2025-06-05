@@ -38,8 +38,8 @@ const Expenses = () => {
       expense.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.expense_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = !categoryFilter || expense.category_id === categoryFilter;
-    const matchesPaymentMethod = !paymentMethodFilter || expense.payment_method === paymentMethodFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === 'all_categories' || expense.category_id === categoryFilter;
+    const matchesPaymentMethod = !paymentMethodFilter || paymentMethodFilter === 'all_payment_methods' || expense.payment_method === paymentMethodFilter;
     
     const matchesDateRange = !startDate || !endDate || isWithinInterval(
       new Date(expense.expense_date),
@@ -161,7 +161,7 @@ const Expenses = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all_categories">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
@@ -175,7 +175,7 @@ const Expenses = () => {
                     <SelectValue placeholder="All Payment Methods" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Payment Methods</SelectItem>
+                    <SelectItem value="all_payment_methods">All Payment Methods</SelectItem>
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                     <SelectItem value="credit_card">Credit Card</SelectItem>
@@ -188,7 +188,7 @@ const Expenses = () => {
               <div className="flex flex-col lg:flex-row gap-4 items-center">
                 <DateRangePicker onDateRangeChange={handleDateRangeChange} />
                 
-                {(searchTerm || categoryFilter || paymentMethodFilter || startDate || endDate) && (
+                {(searchTerm || (categoryFilter && categoryFilter !== 'all_categories') || (paymentMethodFilter && paymentMethodFilter !== 'all_payment_methods') || startDate || endDate) && (
                   <Button
                     variant="outline"
                     onClick={() => {
