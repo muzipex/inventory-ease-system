@@ -9,10 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useExpenses, Expense, ExpenseCategory } from '@/hooks/useExpenses';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ExpenseModalProps {
   isOpen: boolean;
@@ -29,12 +31,19 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
     payment_method: 'cash',
     description: '',
     supplier_name: '',
+    employee_name: '',
     is_recurring: false,
     recurring_frequency: '',
     recurring_end_date: undefined as Date | undefined,
   });
 
-  const { addExpense, updateExpense } = useExpenses();
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDescription, setNewCategoryDescription] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+  const { addExpense, updateExpense, refetch } = useExpenses();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (expense) {
@@ -45,6 +54,7 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
         payment_method: expense.payment_method,
         description: expense.description || '',
         supplier_name: expense.supplier_name || '',
+        employee_name: expense.employee_name || '',
         is_recurring: expense.is_recurring,
         recurring_frequency: expense.recurring_frequency || '',
         recurring_end_date: expense.recurring_end_date ? new Date(expense.recurring_end_date) : undefined,
@@ -57,12 +67,58 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
         payment_method: 'cash',
         description: '',
         supplier_name: '',
+        employee_name: '',
         is_recurring: false,
         recurring_frequency: '',
         recurring_end_date: undefined,
       });
     }
   }, [expense, isOpen]);
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingCategory(true);
+    try {
+      const { data, error } = await supabase
+        .from('expense_categories')
+        .insert([{
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || null,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Category created successfully",
+      });
+
+      setFormData(prev => ({ ...prev, category_id: data.id }));
+      setNewCategoryName('');
+      setNewCategoryDescription('');
+      setShowNewCategory(false);
+      await refetch();
+    } catch (error) {
+      console.error('Error creating category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create category",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +131,7 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
         payment_method: formData.payment_method,
         description: formData.description || null,
         supplier_name: formData.supplier_name || null,
+        employee_name: formData.employee_name || null,
         is_recurring: formData.is_recurring,
         recurring_frequency: formData.is_recurring ? formData.recurring_frequency : null,
         recurring_end_date: formData.is_recurring && formData.recurring_end_date 
@@ -96,7 +153,7 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{expense ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
         </DialogHeader>
@@ -130,18 +187,65 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {!showNewCategory ? (
+              <div className="flex gap-2">
+                <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowNewCategory(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Category name"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                />
+                <Input
+                  placeholder="Category description (optional)"
+                  value={newCategoryDescription}
+                  onChange={(e) => setNewCategoryDescription(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    onClick={handleCreateCategory}
+                    disabled={isCreatingCategory}
+                  >
+                    {isCreatingCategory ? 'Creating...' : 'Create'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setShowNewCategory(false);
+                      setNewCategoryName('');
+                      setNewCategoryDescription('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -180,6 +284,16 @@ const ExpenseModal = ({ isOpen, onClose, expense, categories }: ExpenseModalProp
               placeholder="Supplier name"
               value={formData.supplier_name}
               onChange={(e) => setFormData({ ...formData, supplier_name: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="employee_name">Employee Name</Label>
+            <Input
+              id="employee_name"
+              placeholder="Employee name (for salary expenses)"
+              value={formData.employee_name}
+              onChange={(e) => setFormData({ ...formData, employee_name: e.target.value })}
             />
           </div>
 

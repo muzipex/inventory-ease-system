@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Edit, Trash2, Download, TrendingUp, Calendar, FileText, File } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Download, TrendingUp, Calendar, FileText, File, Users } from 'lucide-react';
 import { useExpenses, Expense } from '@/hooks/useExpenses';
 import { useToast } from '@/hooks/use-toast';
 import ExpenseModal from '@/components/ExpenseModal';
@@ -30,12 +30,14 @@ const Expenses = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   // Filter expenses based on search, filters, and date range
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = 
       expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.expense_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = !categoryFilter || categoryFilter === 'all_categories' || expense.category_id === categoryFilter;
@@ -80,6 +82,16 @@ const Expenses = () => {
     toast({
       title: "Analytics View",
       description: `Showing ${type} expense analytics`,
+    });
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setCategoryFilter(categoryId);
+    setActiveTab('overview');
+    toast({
+      title: "Category Filter Applied",
+      description: `Showing expenses for selected category`,
     });
   };
 
@@ -148,7 +160,7 @@ const Expenses = () => {
                   <div className="relative">
                     <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
                     <Input
-                      placeholder="Search expenses..."
+                      placeholder="Search expenses (description, supplier, employee, category)..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -197,6 +209,7 @@ const Expenses = () => {
                       setPaymentMethodFilter('');
                       setStartDate(null);
                       setEndDate(null);
+                      setSelectedCategoryId(null);
                     }}
                     className="flex items-center space-x-2"
                   >
@@ -218,6 +231,7 @@ const Expenses = () => {
                   <TableHead>Amount</TableHead>
                   <TableHead>Payment Method</TableHead>
                   <TableHead>Supplier</TableHead>
+                  <TableHead>Employee</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Actions</TableHead>
@@ -226,7 +240,7 @@ const Expenses = () => {
               <TableBody>
                 {filteredExpenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                       No expenses found
                     </TableCell>
                   </TableRow>
@@ -242,6 +256,16 @@ const Expenses = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>{expense.supplier_name || '-'}</TableCell>
+                      <TableCell>
+                        {expense.employee_name ? (
+                          <div className="flex items-center space-x-1">
+                            <Users className="h-3 w-3 text-gray-500" />
+                            <span className="text-sm">{expense.employee_name}</span>
+                          </div>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
                       <TableCell className="max-w-xs truncate">{expense.description || '-'}</TableCell>
                       <TableCell>
                         {expense.is_recurring ? (
@@ -294,16 +318,25 @@ const Expenses = () => {
                 );
                 
                 return (
-                  <Card key={category.id} className="p-4">
+                  <Card 
+                    key={category.id} 
+                    className={`p-4 cursor-pointer transition-all hover:shadow-md hover:border-blue-300 ${
+                      selectedCategoryId === category.id ? 'border-blue-500 bg-blue-50' : ''
+                    }`}
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{category.name}</h4>
-                        <p className="text-sm text-gray-500">{category.description}</p>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-blue-600 hover:text-blue-700">{category.name}</h4>
+                        <p className="text-sm text-gray-500 mt-1">{category.description}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right ml-4">
                         <p className="font-medium">UGX {total.toLocaleString()}</p>
                         <p className="text-sm text-gray-500">{categoryExpenses.length} expenses</p>
                       </div>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-400">
+                      Click to filter expenses by this category
                     </div>
                   </Card>
                 );

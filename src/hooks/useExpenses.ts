@@ -19,6 +19,7 @@ export interface Expense {
   payment_method: string;
   description?: string;
   supplier_name?: string;
+  employee_name?: string;
   receipt_url?: string;
   is_recurring: boolean;
   recurring_frequency?: string;
