@@ -6,18 +6,22 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Edit, Trash2, Download, TrendingUp, Calendar } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Download, TrendingUp, Calendar, FileText, File } from 'lucide-react';
 import { useExpenses, Expense } from '@/hooks/useExpenses';
 import { useToast } from '@/hooks/use-toast';
 import ExpenseModal from '@/components/ExpenseModal';
 import ExpenseQuickStats from '@/components/ExpenseQuickStats';
 import DateRangePicker from '@/components/DateRangePicker';
+import ExpenseAnalytics from '@/components/ExpenseAnalytics';
+import { useExpenseExport } from '@/hooks/useExpenseExport';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format, isWithinInterval } from 'date-fns';
 
 const Expenses = () => {
   const { expenses, categories, loading, deleteExpense } = useExpenses();
   const { toast } = useToast();
+  const { exportToCSV, exportToPDF, exportToWord } = useExpenseExport();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,27 +58,6 @@ const Expenses = () => {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       await deleteExpense(id);
     }
-  };
-
-  const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Date,Category,Amount,Payment Method,Supplier,Description,Recurring\n"
-      + filteredExpenses.map(expense => 
-          `${expense.expense_date},${expense.expense_categories?.name || ''},${expense.amount},${expense.payment_method},"${expense.supplier_name || ''}","${expense.description || ''}",${expense.is_recurring ? 'Yes' : 'No'}`
-        ).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "expenses_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast({
-      title: "Export Complete",
-      description: "Expenses data has been downloaded as CSV",
-    });
   };
 
   const openModal = () => {
@@ -117,10 +100,28 @@ const Expenses = () => {
           Expense Management
         </h1>
         <div className="flex space-x-2">
-          <Button onClick={handleExport} variant="outline" className="flex items-center space-x-2">
-            <Download className="h-4 w-4" />
-            <span>Export</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center space-x-2">
+                <Download className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => exportToCSV(filteredExpenses)}>
+                <File className="h-4 w-4 mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportToPDF(filteredExpenses)}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportToWord(filteredExpenses)}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export as Word
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={openModal} className="flex items-center space-x-2">
             <Plus className="h-4 w-4" />
             <span>Add Expense</span>
@@ -277,24 +278,7 @@ const Expenses = () => {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Expense Analytics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="font-medium">Monthly Trend</h4>
-                {/* Simplified trend visualization */}
-                <div className="text-sm text-gray-500">
-                  Analytics dashboard coming soon...
-                </div>
-              </div>
-              <div className="space-y-4">
-                <h4 className="font-medium">Category Breakdown</h4>
-                <div className="text-sm text-gray-500">
-                  Category analysis visualization coming soon...
-                </div>
-              </div>
-            </div>
-          </Card>
+          <ExpenseAnalytics expenses={filteredExpenses} />
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-6">
