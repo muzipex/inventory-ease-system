@@ -201,9 +201,9 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
         </DialogHeader>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Products Selection */}
+          {/* Stock Selection */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Available Products</h3>
+            <h3 className="text-lg font-semibold mb-4">Available Stock Items</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {availableProducts.length > 0 ? availableProducts.map(product => (
                 <Card key={product.id} className="p-3">
@@ -224,12 +224,12 @@ const SalesModal = ({ products, onSaleComplete }: SalesModalProps) => {
                   </div>
                 </Card>
               )) : (
-                <p className="text-gray-500">No products available in stock</p>
+                <p className="text-gray-500">No stock items available</p>
               )}
             </div>
           </div>
 
-          {/* Cart */}
+          {/* Shopping Cart */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Shopping Cart</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">

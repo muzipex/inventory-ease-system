@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
 type Sale = Database['public']['Tables']['sales']['Row'];
@@ -10,6 +11,7 @@ export const useSales = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Initial fetch
@@ -227,10 +229,55 @@ export const useSales = () => {
     }
   };
 
+  const deleteSale = async (saleId: string) => {
+    try {
+      console.log('Deleting sale:', saleId);
+
+      // First, delete all sale items associated with this sale
+      const { error: itemsError } = await supabase
+        .from('sale_items')
+        .delete()
+        .eq('sale_id', saleId);
+
+      if (itemsError) {
+        console.error('Error deleting sale items:', itemsError);
+        throw itemsError;
+      }
+
+      // Then delete the sale itself
+      const { error: saleError } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', saleId);
+
+      if (saleError) {
+        console.error('Error deleting sale:', saleError);
+        throw saleError;
+      }
+
+      console.log('Sale deleted successfully');
+      
+      toast({
+        title: "Success",
+        description: "Sale deleted successfully",
+      });
+
+    } catch (err) {
+      console.error('Error in deleteSale:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete sale",
+        variant: "destructive",
+      });
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete sale');
+    }
+  };
+
   return {
     sales,
     loading,
     error,
-    addSale
+    addSale,
+    deleteSale
   };
 };

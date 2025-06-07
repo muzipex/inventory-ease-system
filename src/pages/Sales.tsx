@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Search, Calendar, Download, Receipt } from 'lucide-react';
+import { Search, Calendar, Download, Receipt, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -17,7 +18,7 @@ const Sales = () => {
   const [dateRange, setDateRange] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
-  const { sales, loading: salesLoading, error: salesError, addSale } = useSales();
+  const { sales, loading: salesLoading, error: salesError, addSale, deleteSale } = useSales();
   const { products, loading: productsLoading } = useProducts();
   const { recordPayment } = usePayments();
 
@@ -73,6 +74,16 @@ const Sales = () => {
       await recordPayment(saleId, paymentAmount, paymentMethod);
     } catch (err) {
       console.error('Payment recording failed:', err);
+    }
+  };
+
+  const handleDeleteSale = async (saleId: string, orderNumber: string) => {
+    if (window.confirm(`Are you sure you want to delete sale ${orderNumber}? This action cannot be undone.`)) {
+      try {
+        await deleteSale(saleId);
+      } catch (err) {
+        console.error('Failed to delete sale:', err);
+      }
     }
   };
 
@@ -333,6 +344,14 @@ const Sales = () => {
                           onPaymentComplete={handlePaymentComplete}
                         />
                       )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteSale(sale.id, sale.order_id)}
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </td>
                 </tr>

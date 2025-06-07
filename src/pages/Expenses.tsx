@@ -101,25 +101,6 @@ const Expenses = () => {
     });
   };
 
-  // Filter expenses based on search, filters, and date range
-  const filteredExpenses = expenses.filter(expense => {
-    const matchesSearch = 
-      expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.supplier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.employee_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.expense_categories?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = !categoryFilter || categoryFilter === 'all_categories' || expense.category_id === categoryFilter;
-    const matchesPaymentMethod = !paymentMethodFilter || paymentMethodFilter === 'all_payment_methods' || expense.payment_method === paymentMethodFilter;
-    
-    const matchesDateRange = !startDate || !endDate || isWithinInterval(
-      new Date(expense.expense_date),
-      { start: startDate, end: endDate }
-    );
-    
-    return matchesSearch && matchesCategory && matchesPaymentMethod && matchesDateRange;
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">

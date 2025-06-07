@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Filter, Edit, Trash2, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,7 +28,7 @@ const Products = () => {
 
   const handleSaveProduct = async (productData: any) => {
     try {
-      console.log('Processing product save:', productData);
+      console.log('Processing stock save:', productData);
       
       // Validate the data before sending
       if (!productData.name || !productData.sku || !productData.category) {
@@ -52,25 +53,25 @@ const Products = () => {
       console.log('Sending to database:', dbProductData);
 
       if (productData.id) {
-        // Update existing product
+        // Update existing stock item
         await updateProduct(productData.id, dbProductData);
         toast({
-          title: "Product Updated",
+          title: "Stock Updated",
           description: `${productData.name} has been updated successfully`,
         });
       } else {
-        // Add new product
+        // Add new stock item
         await addProduct(dbProductData);
         toast({
-          title: "Product Added",
+          title: "Stock Added",
           description: `${productData.name} has been added successfully with ${productData.stock} units in stock`,
         });
       }
     } catch (err) {
-      console.error('Error saving product:', err);
+      console.error('Error saving stock:', err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to save product. Please try again.",
+        description: err instanceof Error ? err.message : "Failed to save stock item. Please try again.",
         variant: "destructive"
       });
     }
@@ -81,14 +82,14 @@ const Products = () => {
       const product = products.find(p => p.id === productId);
       await deleteProduct(productId);
       toast({
-        title: "Product Deleted",
+        title: "Stock Deleted",
         description: `${product?.name} has been deleted successfully`,
       });
     } catch (err) {
-      console.error('Error deleting product:', err);
+      console.error('Error deleting stock:', err);
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to delete product",
+        description: err instanceof Error ? err.message : "Failed to delete stock item",
         variant: "destructive"
       });
     }
@@ -102,7 +103,7 @@ const Products = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading products...</div>
+        <div className="text-lg">Loading stock...</div>
       </div>
     );
   }
@@ -118,7 +119,7 @@ const Products = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Stock Management</h1>
         <ProductModal onSave={handleSaveProduct} />
       </div>
 
@@ -128,7 +129,7 @@ const Products = () => {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Search products by name or SKU..."
+              placeholder="Search stock by name or SKU..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -141,14 +142,14 @@ const Products = () => {
         </div>
       </Card>
 
-      {/* Products Table */}
+      {/* Stock Table */}
       <Card>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
+                  Stock Item
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   SKU
@@ -160,7 +161,7 @@ const Products = () => {
                   Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
+                  Stock Level
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -241,9 +242,9 @@ const Products = () => {
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No stock found</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search terms or add a new product.
+            Try adjusting your search terms or add a new stock item.
           </p>
         </div>
       )}
