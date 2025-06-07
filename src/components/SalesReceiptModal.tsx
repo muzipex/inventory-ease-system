@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Sale {
   id: string;
@@ -18,6 +18,14 @@ interface Sale {
   debit_balance?: number;
 }
 
+interface SaleItem {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  product_name?: string;
+}
+
 interface SalesReceiptModalProps {
   sale: Sale;
   open: boolean;
@@ -26,6 +34,44 @@ interface SalesReceiptModalProps {
 
 const SalesReceiptModal = ({ sale, open, onOpenChange }: SalesReceiptModalProps) => {
   const { toast } = useToast();
+  const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (open && sale.id) {
+      fetchSaleItems();
+    }
+  }, [open, sale.id]);
+
+  const fetchSaleItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sale_items')
+        .select(`
+          *,
+          products (name)
+        `)
+        .eq('sale_id', sale.id);
+
+      if (error) throw error;
+
+      const itemsWithNames = data?.map(item => ({
+        ...item,
+        product_name: item.products?.name || 'Unknown Product'
+      })) || [];
+
+      setSaleItems(itemsWithNames);
+    } catch (error) {
+      console.error('Error fetching sale items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load sale items",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isPartialPayment = sale.status === 'Partial Payment' || (sale.cash_paid !== undefined && sale.debit_balance !== undefined && sale.debit_balance > 0);
 
@@ -100,7 +146,15 @@ Order No.: ${sale.order_id}
 
 Customer: ${sale.customer_name}
 
-Items Purchased: ${sale.items_count}
+ITEMS PURCHASED:
+`;
+
+    saleItems.forEach(item => {
+      receiptContent += `${item.product_name} - Qty: ${item.quantity} - UGX ${item.total_price.toLocaleString()}\n`;
+    });
+
+    receiptContent += `
+=====================================
 Total Amount: UGX ${Number(sale.total_amount).toLocaleString()}
 Payment Method: ${sale.payment_method || 'Cash'}
 Status: ${sale.status}
@@ -171,19 +225,33 @@ NGABIRANO'S BLOCKS AND CONCRETE PRODUCTS
               <tr>
                 <th className="border border-black p-1 bg-gray-100 text-left">Description</th>
                 <th className="border border-black p-1 bg-gray-100 text-left">Quantity</th>
+                <th className="border border-black p-1 bg-gray-100 text-left">Unit Price</th>
                 <th className="border border-black p-1 bg-gray-100 text-left">Amount</th>
               </tr>
             </thead>
             <tbody>
+              {loading ? (
+                <tr>
+                  <td className="border border-black p-1" colSpan={4}>Loading items...</td>
+                </tr>
+              ) : saleItems.length > 0 ? (
+                saleItems.map((item, index) => (
+                  <tr key={index}>
+                    <td className="border border-black p-1">{item.product_name}</td>
+                    <td className="border border-black p-1">{item.quantity}</td>
+                    <td className="border border-black p-1">UGX {Number(item.unit_price).toLocaleString()}</td>
+                    <td className="border border-black p-1">UGX {Number(item.total_price).toLocaleString()}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="border border-black p-1" colSpan={4}>
+                    Mixed Items ({sale.payment_method === 'credit' || isPartialPayment ? 'Credit sale' : sale.payment_method === 'bank_transfer' ? 'Bank transfer' : 'Cash sale'})
+                  </td>
+                </tr>
+              )}
               <tr>
-                <td className="border border-black p-1">
-                  Mixed Items ({sale.payment_method === 'credit' || isPartialPayment ? 'Credit sale' : sale.payment_method === 'bank_transfer' ? 'Bank transfer' : 'Cash sale'})
-                </td>
-                <td className="border border-black p-1">{sale.items_count}</td>
-                <td className="border border-black p-1">UGX {Number(sale.total_amount).toLocaleString()}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-bold" colSpan={2}>TOTAL:</td>
+                <td className="border border-black p-2 font-bold" colSpan={3}>TOTAL:</td>
                 <td className="border border-black p-2 font-bold">UGX {Number(sale.total_amount).toLocaleString()}</td>
               </tr>
             </tbody>

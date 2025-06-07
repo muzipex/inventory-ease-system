@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Home, ShoppingCart, BarChart3, Users, Settings, Menu, Sun, Moon, Receipt } from 'lucide-react';
+import { Package, Home, ShoppingCart, BarChart3, Users, Settings, Menu, Sun, Moon, Receipt, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeSelector from './ThemeSelector';
 
@@ -61,13 +61,14 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex items-center">
               <div className="relative group">
                 <div className="absolute -inset-2 bg-white/10 rounded-xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                <div className="relative py-2 border glass-effect transition-all duration-500 px-4 bg-white/5 backdrop-blur-xl rounded-xl hover:bg-white/10">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-white">
-                      <span className="text-lg font-black tracking-tight bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                        NGABIRANO BLOCKS
-                      </span>
-                    </div>
+                <div className="relative flex items-center space-x-2 py-2 px-4 bg-white/5 backdrop-blur-xl rounded-xl hover:bg-white/10 border glass-effect transition-all duration-500">
+                  <div className="p-1.5 bg-white/20 rounded-lg">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="text-white">
+                    <span className="text-sm font-black tracking-tight bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                      NGABIRANO
+                    </span>
                   </div>
                 </div>
               </div>
