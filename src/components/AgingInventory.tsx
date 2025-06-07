@@ -1,38 +1,43 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, Package, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useSales } from '@/hooks/useSales';
 
 const AgingInventory = () => {
-  const { products } = useProducts();
-  const { sales } = useSales();
+  const { products, loading: productsLoading } = useProducts();
+  const { sales, loading: salesLoading } = useSales();
 
-  // Calculate aging inventory (products not sold in over a year)
+  // Don't render anything while loading
+  if (productsLoading || salesLoading) {
+    return null;
+  }
+
+  // Calculate aging inventory (products with low movement or high stock levels)
   const getAgingProducts = () => {
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
     return products.filter(product => {
-      // Check if this product has been sold in the last year
-      const recentSales = sales.filter(sale => {
+      // Consider products with stock greater than 3x minimum stock as potentially aging
+      const isHighStock = product.stock > (product.min_stock * 3);
+      
+      // Consider products that haven't been in recent sales
+      const hasRecentSales = sales.some(sale => {
         const saleDate = new Date(sale.sale_date);
-        return saleDate > oneYearAgo && sale.items_count > 0;
+        return saleDate > threeMonthsAgo && sale.customer_name && sale.total_amount > 0;
       });
 
-      // For simplicity, we'll consider products with zero stock as potentially aging
-      // In a real scenario, you'd need sale_items data to check specific product sales
-      const hasRecentActivity = recentSales.length > 0;
-      const isLowMovement = product.stock > 0 && !hasRecentActivity;
-      
-      return isLowMovement;
+      // Mark as aging if high stock and no recent activity, or stock is very high
+      return (isHighStock && !hasRecentSales) || product.stock > 100;
     });
   };
 
   const agingProducts = getAgingProducts();
 
-  if (agingProducts.length === 0) {
+  // Only show if there are aging products
+  if (!agingProducts || agingProducts.length === 0) {
     return null;
   }
 
@@ -48,9 +53,9 @@ const AgingInventory = () => {
             <Clock className="h-5 w-5 text-yellow-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-yellow-800">Aging Inventory Alert</h3>
+            <h3 className="font-semibold text-yellow-800">Aging Stock Alert</h3>
             <p className="text-sm text-yellow-600">
-              {agingProducts.length} product{agingProducts.length > 1 ? 's' : ''} with low movement detected
+              {agingProducts.length} stock item{agingProducts.length > 1 ? 's' : ''} with low movement detected
             </p>
           </div>
         </div>

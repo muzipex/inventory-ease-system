@@ -11,6 +11,8 @@ export const useProducts = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Initial fetch
     const fetchProducts = async () => {
       try {
@@ -25,13 +27,20 @@ export const useProducts = () => {
           throw error;
         }
         
-        console.log('Initial products fetched:', data?.length || 0);
-        setProducts(data || []);
+        if (isMounted) {
+          console.log('Initial products fetched:', data?.length || 0);
+          setProducts(data || []);
+          setError(null);
+        }
       } catch (err) {
         console.error('Failed to fetch products:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -50,6 +59,8 @@ export const useProducts = () => {
         },
         (payload) => {
           console.log('Product change received:', payload);
+          
+          if (!isMounted) return;
           
           if (payload.eventType === 'INSERT') {
             console.log('Adding new product:', payload.new);
@@ -74,6 +85,7 @@ export const useProducts = () => {
       });
 
     return () => {
+      isMounted = false;
       console.log('Cleaning up products subscription...');
       supabase.removeChannel(channel);
     };

@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
 type Sale = Database['public']['Tables']['sales']['Row'];
-type SaleItem = Database['public']['Tables']['sale_items']['Row'];
 
 export const useSales = () => {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -14,6 +12,8 @@ export const useSales = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Initial fetch
     const fetchSales = async () => {
       try {
@@ -27,13 +27,21 @@ export const useSales = () => {
           console.error('Error fetching sales:', error);
           throw error;
         }
-        console.log('Sales fetched successfully:', data?.length || 0, 'records');
-        setSales(data || []);
+        
+        if (isMounted) {
+          console.log('Sales fetched successfully:', data?.length || 0, 'records');
+          setSales(data || []);
+          setError(null);
+        }
       } catch (err) {
         console.error('Failed to fetch sales:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -51,6 +59,8 @@ export const useSales = () => {
         },
         (payload) => {
           console.log('Sale change received:', payload);
+          
+          if (!isMounted) return;
           
           if (payload.eventType === 'INSERT') {
             setSales(prev => [payload.new as Sale, ...prev]);
@@ -70,6 +80,7 @@ export const useSales = () => {
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
   }, []);
