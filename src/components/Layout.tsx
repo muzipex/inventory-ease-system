@@ -67,7 +67,7 @@ const Layout = ({ children }: LayoutProps) => {
                   </div>
                   <div className="text-white">
                     <span className="text-sm font-black tracking-tight bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                      NGABIRANO
+                      NGABIRANO BLOCKS
                     </span>
                   </div>
                 </div>
